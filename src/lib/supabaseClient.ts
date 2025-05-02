@@ -1,0 +1,8 @@
+import { createClient } from '@supabase/supabase-js'
+
+// Read Supabase connection details from environment variables
+const supabaseUrl = process.env.SUPABASE_URL!
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
+
+// Initialize and export the Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey) 

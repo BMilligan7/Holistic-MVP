@@ -1,0 +1,24 @@
+{
+  "name": "holistic-mvp-3",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BMilligan7/Holistic-MVP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BMilligan7/Holistic-MVP/issues"
+  },
+  "homepage": "https://github.com/BMilligan7/Holistic-MVP#readme",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.5.0"
+  }
+}

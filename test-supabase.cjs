@@ -44,7 +44,7 @@ async function runAuthTests() {
       ' and click the confirmation link. <<<'
     )
     // Pause to allow manual email confirmation
-    const waitTime = 30 // seconds
+    const waitTime = 90 // seconds (Increased from 30)
     console.log(`Waiting ${waitTime} seconds for manual email confirmation...`)
     await new Promise((resolve) => setTimeout(resolve, waitTime * 1000))
   } else {

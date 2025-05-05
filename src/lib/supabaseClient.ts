@@ -1,8 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Read Supabase connection details from environment variables
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
+// Ensure your environment variables are loaded correctly,
+// potentially using a library like dotenv if not handled by your framework/build tool.
+// Example: import 'dotenv/config'; // if using dotenv
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl) {
+  throw new Error("Missing environment variable: VITE_SUPABASE_URL");
+}
+if (!supabaseAnonKey) {
+  throw new Error("Missing environment variable: VITE_SUPABASE_ANON_KEY");
+}
 
 // Initialize and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

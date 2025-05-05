@@ -141,8 +141,13 @@ async function cleanupTestUsers() {
 
 // Helper to check for RLS errors specifically
 function isRLSError(error) {
-    // Basic check, Supabase might change error messages/codes
-    return error && (error.message.toLowerCase().includes('row level security') || error.message.toLowerCase().includes('rls'));
+    if (!error || !error.message) return false;
+    const lowerCaseMessage = error.message.toLowerCase();
+    // Add specific check for insert/update violations
+    const violatesPolicy = lowerCaseMessage.includes('violates row-level security policy');
+    // Keep original checks too
+    const mentionsRLS = lowerCaseMessage.includes('rls') || lowerCaseMessage.includes('row level security');
+    return violatesPolicy || mentionsRLS;
 }
 
 
@@ -256,35 +261,41 @@ async function runRLSTests() {
          console.error(`❌ [B.2.1] User B illegally read User A's plan! RLS Failed! Data:`, readData);
      }
 
-     // Attempt to delete User A's plan while logged in as B
-     console.log(`[B.2.2] Attempting delete of User A's plan (${planAId}) as User B...`);
-     const { data: deleteData, error: deleteError } = await supabase
-         .from('plans')
-         .delete()
-         .eq('id', planAId)
-         .select(); // See what delete returns on RLS fail
+    // Attempt to delete User A's plan while logged in as B
+    console.log(`[B.2.2] Attempting delete of User A's plan (${planAId}) as User B...`);
+    const { data: deleteData, error: deleteError } = await supabase
+        .from('plans')
+        .delete()
+        .eq('id', planAId)
+        .select(); // select() might return empty array [] if delete is blocked/finds nothing
 
-     if (deleteError && isRLSError(deleteError)) {
-          // This is the EXPECTED outcome for a blocking RLS policy
-          console.log(`✅ [B.2.2] User B correctly blocked by RLS from deleting User A's plan.`);
-     } else if (deleteError) {
-         // Another error occurred
-         console.error(`❌ [B.2.2] User B deleting User A's plan failed with unexpected error:`, deleteError.message);
-     } else {
-         // The delete command succeeded WITHOUT error - RLS FAILED!
-         // Supabase delete might return an empty array on success, or the deleted items
-         console.error(`❌ [B.2.2] User B delete command for User A's plan succeeded unexpectedly! RLS FAILED! Response:`, deleteData);
-         // Verify with admin
-          const { data: checkData, error: checkError } = await supabaseAdmin.from('plans').select('id').eq('id', planAId).maybeSingle();
-          if (!checkData) {
-               console.error(`   (Verification) User A's plan (${planAId}) confirmed deleted.`);
-          } else if(checkError) {
-              console.error(`   (Verification) Error checking deletion status: ${checkError.message}`);
-          }
-     }
+    if (deleteError && isRLSError(deleteError)) {
+         // Explicit RLS error received - This is a clear success
+         console.log(`✅ [B.2.2] User B correctly blocked by RLS (received RLS error) from deleting User A's plan.`);
+    } else if (deleteError) {
+        // Another unexpected error occurred
+        console.error(`❌ [B.2.2] User B deleting User A's plan failed with unexpected error:`, deleteError.message);
+    } else if (!deleteError && (!deleteData || deleteData.length === 0)) {
+         // No error AND deleteData is null/empty array: This indicates RLS likely blocked it silently.
+         console.log(`✅ [B.2.2] User B likely blocked by RLS from deleting User A's plan (delete returned no error and no data).`);
+         // Optional: Verify with admin client that the plan still exists
+         const { data: checkData } = await supabaseAdmin.from('plans').select('id').eq('id', planAId).maybeSingle();
+         if (!checkData) {
+             console.warn(`   (Verification) WARNING: Plan ${planAId} seems to be deleted despite apparent RLS block?`);
+         } else {
+             console.log(`   (Verification) Plan ${planAId} still exists.`);
+         }
+    } else {
+        // No error AND we got data back (unexpected for delete?) OR deleteData is not empty
+        console.error(`❌ [B.2.2] User B delete command for User A's plan appears to have succeeded! RLS FAILED? Response:`, deleteData);
+        const { data: checkData } = await supabaseAdmin.from('plans').select('id').eq('id', planAId).maybeSingle();
+        if (!checkData) {
+             console.error(`   (Verification) User A's plan (${planAId}) confirmed deleted.`);
+        }
+    }
 
 
-      // Add more disallowed actions: create task for plan A, update profile A etc.
+     // Add more disallowed actions: create task for plan A, update profile A etc.
 
 
   } catch (error) {

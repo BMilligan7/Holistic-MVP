@@ -9,6 +9,7 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "allowJs": false,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -23,6 +24,14 @@
     /* Add Vite Client Types */
     "types": ["vite/client"]
   },
-  "include": ["src"],
+  "include": [
+    "src", 
+    "vite.config.ts", 
+    "tailwind.config.ts", 
+    "postcss.config.ts",
+    "test-dotenv.ts",
+    "test-supabase.ts",
+    "test-db-schema.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 } 

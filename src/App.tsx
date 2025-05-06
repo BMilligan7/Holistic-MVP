@@ -1,4 +1,4 @@
-import React from 'react';
+// import React from 'react';
 import './index.css'
 // Import the new components
 import SignUpForm from './components/auth/SignUpForm';

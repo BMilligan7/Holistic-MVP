@@ -1,8 +1,11 @@
-// test-dotenv.cjs
+// test-dotenv.ts
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
 console.log('Attempting to load .env file...');
 try {
   // Use the same explicit path logic
-  const dotenvResult = require('dotenv').config({ path: require('path').resolve(process.cwd(), '.env') });
+  const dotenvResult: dotenv.DotenvConfigOutput = dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
   if (dotenvResult.error) {
     console.error('dotenv Error:', dotenvResult.error);

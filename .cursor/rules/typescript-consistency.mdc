@@ -1,5 +1,30 @@
 ---
-description:
-globs:
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
+-   **TypeScript Exclusivity**
+    -   This project uses TypeScript exclusively for all source code, configuration files, and scripts where possible.
+    -   **DO NOT** create or use files with `.js` or `.cjs` extensions.
+    -   Always use `.ts` for TypeScript logic/config files and `.tsx` for React components.
+
+-   **Rationale**
+    -   Maintain code consistency and leverage TypeScript's type safety benefits across the entire codebase.
+    -   Avoid potential confusion and configuration issues arising from mixed JavaScript/TypeScript environments.
+
+-   **Examples**
+    ```typescript
+    // ✅ DO: Use .ts for utility/config files
+    // src/lib/utils.ts
+    // vite.config.ts
+    // postcss.config.ts
+    // test-script.ts
+
+    // ✅ DO: Use .tsx for React components
+    // src/components/MyComponent.tsx
+    // src/App.tsx
+
+    // ❌ DON'T: Use .js or .cjs
+    // scripts/legacy-script.js 
+    // config/old-config.cjs 
+    ```

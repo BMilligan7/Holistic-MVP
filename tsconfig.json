@@ -28,7 +28,7 @@
     "src", 
     "vite.config.ts", 
     "tailwind.config.ts", 
-    "postcss.config.ts",
+    "postcss.config.mts",
     "test-dotenv.ts",
     "test-supabase.ts",
     "test-db-schema.ts"

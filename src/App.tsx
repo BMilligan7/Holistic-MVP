@@ -1,22 +1,22 @@
-// import React from 'react';
-import './index.css'
-// Import the new components
-import SignUpForm from './components/auth/SignUpForm';
-import LoginForm from './components/auth/LoginForm';
-import ResetPasswordForm from './components/auth/ResetPassword';
+import './index.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Import the page components
+// import { testValue } from './pages/SignUpPage'; // Problematic path still commented
+import UserRegistrationPage from './pages/UserRegistrationPage.tsx';
+import LoginPage from './pages/LoginPage.tsx';
+import ResetPasswordPage from './pages/ResetPasswordPage.tsx'; // Uncommented
 
 function App() {
+  // console.log('Critical Test Value:', criticalTestValue); // criticalTestValue no longer exported
   return (
-    <div className="p-4">
-      <h1 className="text-3xl font-bold text-center text-blue-600 mb-10">Auth Form Testing</h1>
-      {/* Render the forms side-by-side */}
-      <div className="flex flex-col md:flex-row gap-8 justify-around">
-        <SignUpForm />
-        <LoginForm />
-        <ResetPasswordForm />
-      </div>
-    </div>
-  )
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<UserRegistrationPage />} /> {/* Use the new component */}
+      <Route path="/reset-password" element={<ResetPasswordPage />} /> {/* Uncommented */}
+    </Routes>
+  );
 }
 
-export default App 
+export default App; 

@@ -66,7 +66,7 @@ const LoginForm = () => {
           </button>
           <a
             className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-            href="#" // TODO: Update with actual password reset link/route
+            href="/reset-password"
           >
             Forgot Password?
           </a>
@@ -74,7 +74,7 @@ const LoginForm = () => {
         <div className="text-center">
           <a
             className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-            href="#" // TODO: Update with actual signup link/route
+            href="/signup"
           >
             Don't have an account? Sign Up
           </a>

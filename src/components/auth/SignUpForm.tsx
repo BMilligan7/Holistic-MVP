@@ -80,7 +80,7 @@ const SignUpForm = () => {
           </button>
           <a
             className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-            href="#" // TODO: Update with actual login link/route
+            href="/login"
           >
             Already have an account? Log In
           </a>

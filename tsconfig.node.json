@@ -8,5 +8,5 @@
     "strict": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "postcss.config.ts", "tailwind.config.ts"]
+  "include": ["vite.config.ts", "postcss.config.mts", "tailwind.config.ts"]
 } 

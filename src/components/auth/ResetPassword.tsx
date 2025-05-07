@@ -52,7 +52,7 @@ const ResetPasswordForm = () => {
           </button>
           <a
             className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-            href="#" // TODO: Update with actual login link/route
+            href="/login"
           >
             Back to Login
           </a>

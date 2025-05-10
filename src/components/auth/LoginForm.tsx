@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // For redirection and accessing location state
-import { useAuth } from '../../contexts/AuthContext'; // Import useAuth
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
@@ -11,10 +11,11 @@ const LoginForm = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = location.state?.from?.pathname || "/dashboard"; // Get redirect path or default to dashboard
+  const from = location.state?.from?.pathname || "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleSubmit called. Email:', email, 'Password:', password); // ADDED
     setFormError('');
 
     if (!email || !password) {
@@ -26,14 +27,20 @@ const LoginForm = () => {
     try {
       const { error: signInError } = await signIn({ email, password });
 
-      if (signInError) {
-        setFormError(signInError.message || 'Failed to sign in. Please check your credentials.');
-      } else {
-        // AuthContext's onAuthStateChange will handle setting the user session.
-        // Navigate to the intended destination or dashboard.
-        navigate(from, { replace: true });
-      }
+    // Inside src/components/auth/LoginForm.tsx
+    // Inside the handleSubmit function's try block:
+
+    if (signInError) {
+      console.error('Sign In Error from Supabase:', signInError);
+      setFormError(signInError.message || 'Failed to sign in. Please check your credentials.');
+    } else {
+      console.log('Login successful. location.state:', location.state);
+      console.log('Login successful. Navigating to "from":', from);
+      navigate(from, { replace: true });
+    }
+// ...
     } catch (err: any) {
+      console.error('Caught an exception during sign In:', err);
       setFormError(err.message || 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
@@ -103,4 +110,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm; 
+export default LoginForm;

@@ -1,23 +1,35 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // For redirection
-import { useAuth } from '../../contexts/AuthContext'; // Import useAuth
+import React, { useState, useEffect, useRef } from 'react'; // Import useRef
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [formError, setFormError] = useState(''); 
-  const [formMessage, setFormMessage] = useState(''); // Added for success/info messages
+  const [formError, setFormError] = useState('');
+  const [formMessage, setFormMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const timerIdRef = useRef<NodeJS.Timeout | null>(null); // Use useRef for timerId
+
+  // useEffect for cleaning up setTimeout if the component unmounts
+  useEffect(() => {
+    // This cleanup function will be called when the component unmounts.
+    // It will clear the timeout if timerIdRef.current has a value.
+    return () => {
+      if (timerIdRef.current) {
+        clearTimeout(timerIdRef.current);
+      }
+    };
+  }, []); // Empty dependency array means this effect runs once on mount and cleanup on unmount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
-    setFormMessage(''); // Clear previous messages
-    
+    setFormMessage('');
+
     if (password !== confirmPassword) {
       setFormError('Passwords do not match.');
       return;
@@ -30,17 +42,21 @@ const SignUpForm = () => {
       if (signUpError) {
         setFormError(signUpError.message || 'Failed to sign up. Please try again.');
       } else if (data.user && data.session) {
-        // User created AND session active (e.g., email auth disabled, or auto-confirmed)
-        navigate('/dashboard'); 
+        navigate('/');
       } else if (data.user && !data.session) {
-        // User created, but session is null (email confirmation pending)
-        setFormMessage('Sign up successful! Please check your email to confirm your account before logging in.');
-        setEmail(''); // Clear form
+        setFormMessage('Sign up successful! Please check your email to confirm your account. Redirecting to login...');
+        setEmail('');
         setPassword('');
         setConfirmPassword('');
+        
+        // Clear any existing timer before setting a new one (belt-and-suspenders)
+        if (timerIdRef.current) {
+            clearTimeout(timerIdRef.current);
+        }
+        timerIdRef.current = setTimeout(() => { // Assign to .current
+          navigate('/login');
+        }, 4000);
       } else {
-        // This case might be unusual if no error and no user, or if data format is unexpected.
-        // Defaulting to an error or a generic success message prompting email check.
         setFormError('Sign up process completed. Please check your email or try logging in.');
       }
     } catch (err: any) {
@@ -55,7 +71,7 @@ const SignUpForm = () => {
       <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
       <form onSubmit={handleSubmit}>
         {formError && <p className="text-red-500 text-sm mb-4">{formError}</p>}
-        {formMessage && <p className="text-green-500 text-sm mb-4">{formMessage}</p>} {/* Display success/info message */}
+        {formMessage && <p className="text-green-500 text-sm mb-4\">{formMessage}</p>}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
             Email
@@ -121,4 +137,4 @@ const SignUpForm = () => {
   );
 };
 
-export default SignUpForm; 
+export default SignUpForm;

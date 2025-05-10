@@ -1,13 +1,12 @@
 import React from 'react';
+import ResetPasswordForm from '../components/auth/ResetPassword';
 
 const ResetPasswordPage: React.FC = () => {
   return (
-    <div>
-      <h1>Reset Password</h1>
-      {/* Placeholder for reset password form */}
-      <p>Reset password form will go here.</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <ResetPasswordForm />
     </div>
   );
 };
 
-export default ResetPasswordPage; 
+export default ResetPasswordPage;

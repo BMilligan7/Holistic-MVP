@@ -24,7 +24,6 @@ export default function Navbar() {
         {user ? (
           <>
             <Link to="/">Dashboard</Link>
-            <Link to="/profile">Profile</Link>
             <Link to="/settings">Settings</Link>
             <button onClick={handleLogout} className="logout-btn">Logout</button>
           </>

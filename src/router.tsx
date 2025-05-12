@@ -4,11 +4,10 @@ import Layout from './components/layout/Layout';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import SettingsPage from './pages/SettingsPage';
 
 // Placeholder pages - these will need to be created in src/pages/
 const DashboardPage = () => <div>Dashboard Page (Protected)</div>;
-const ProfilePage = () => <div>Profile Page (Protected)</div>;
-const SettingsPage = () => <div>Settings Page (Protected)</div>;
 
 const router = createBrowserRouter([
   {
@@ -24,10 +23,6 @@ const router = createBrowserRouter([
       {
         path: '/', // Dashboard at root when protected
         element: <ProtectedRoute><DashboardPage /></ProtectedRoute>
-      },
-      {
-        path: 'profile',
-        element: <ProtectedRoute><ProfilePage /></ProtectedRoute>
       },
       {
         path: 'settings',

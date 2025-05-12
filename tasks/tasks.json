@@ -1,0 +1,294 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Setup Supabase Project and Database Schema",
+      "description": "Initialize the Supabase project, configure authentication, and create the database schema for all required tables.",
+      "status": "done",
+      "dependencies": [],
+      "priority": "high",
+      "details": "1. Create a new Supabase project\n2. Configure authentication settings (email/password)\n3. Create database tables according to the schema in the PRD: users, profiles, plans, daily_tasks, chat_messages, micro_surveys, and logged_data\n4. Set up appropriate relationships, constraints, and indexes\n5. Create RLS (Row Level Security) policies for each table to ensure data security\n6. Test database connections and basic CRUD operations\n7. Document the schema and access patterns",
+      "testStrategy": "Verify table creation with SQL queries. Test RLS policies by attempting to access data with different user contexts. Validate foreign key constraints and relationships by inserting test data.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Initialize Supabase Project and Configure Environment",
+          "description": "Create a new Supabase project, set up the development environment, and configure the client connection for your application.",
+          "dependencies": [],
+          "details": "1. Sign up or log in to Supabase dashboard (https://app.supabase.com)\n2. Create a new project with an appropriate name and secure password\n3. Note down the project URL and API keys (anon key and service role key)\n4. Install Supabase client in your application: `npm install @supabase/supabase-js` or equivalent for your framework\n5. Create a configuration file to store Supabase connection details (use environment variables for security)\n6. Initialize the Supabase client in your application:\n```javascript\nimport { createClient } from '@supabase/supabase-js'\n\nconst supabaseUrl = process.env.SUPABASE_URL\nconst supabaseKey = process.env.SUPABASE_ANON_KEY\nconst supabase = createClient(supabaseUrl, supabaseKey)\n```\n7. Test the connection by making a simple query\n\nTesting approach: Verify the connection is working by running a simple query against the default public schema.",
+          "status": "done",
+          "parentTaskId": 1
+        },
+        {
+          "id": 2,
+          "title": "Configure Authentication System",
+          "description": "Set up and configure the authentication system in Supabase, including email/password authentication, email templates, and redirect URLs.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Navigate to Authentication > Settings in the Supabase dashboard\n2. Configure site URL and redirect URLs for your application\n3. Enable/disable email confirmations based on your requirements\n4. Customize email templates for confirmation, magic link, and password reset\n5. Configure password policies (minimum length, complexity requirements)\n6. Implement basic authentication functions in your application:\n```javascript\n// Sign up function\nasync function signUp(email, password) {\n  const { data, error } = await supabase.auth.signUp({\n    email,\n    password,\n  })\n  return { data, error }\n}\n\n// Sign in function\nasync function signIn(email, password) {\n  const { data, error } = await supabase.auth.signInWithPassword({\n    email,\n    password,\n  })\n  return { data, error }\n}\n\n// Sign out function\nasync function signOut() {\n  const { error } = await supabase.auth.signOut()\n  return { error }\n}\n```\n7. Test the authentication flow\n\nTesting approach: Create test users and verify the complete authentication flow including signup, email verification (if enabled), login, password reset, and logout.",
+          "status": "done",
+          "parentTaskId": 1
+        },
+        {
+          "id": 3,
+          "title": "Create Core Database Tables and Relationships",
+          "description": "Design and implement the core database tables (users, profiles, plans) with appropriate relationships, constraints, and indexes.",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create the users extension table (profiles):\n```sql\nCREATE TABLE profiles (\n  id UUID REFERENCES auth.users(id) PRIMARY KEY,\n  username TEXT UNIQUE,\n  full_name TEXT,\n  avatar_url TEXT,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL\n);\n```\n\n2. Create a trigger to automatically create a profile when a user signs up:\n```sql\nCREATE OR REPLACE FUNCTION public.handle_new_user() \nRETURNS TRIGGER AS $$\nBEGIN\n  INSERT INTO public.profiles (id, username, full_name)\n  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');\n  RETURN new;\nEND;\n$$ LANGUAGE plpgsql SECURITY DEFINER;\n\nCREATE TRIGGER on_auth_user_created\n  AFTER INSERT ON auth.users\n  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();\n```\n\n3. Create the plans table:\n```sql\nCREATE TABLE plans (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  user_id UUID REFERENCES profiles(id) NOT NULL,\n  title TEXT NOT NULL,\n  description TEXT,\n  start_date DATE NOT NULL,\n  end_date DATE,\n  status TEXT NOT NULL CHECK (status IN ('active', 'completed', 'abandoned')),\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL\n);\n\nCREATE INDEX idx_plans_user_id ON plans(user_id);\nCREATE INDEX idx_plans_status ON plans(status);\n```\n\n4. Add updated_at triggers for automatic timestamp updates:\n```sql\nCREATE OR REPLACE FUNCTION update_modified_column()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.updated_at = NOW();\n  RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER update_profiles_modtime\n  BEFORE UPDATE ON profiles\n  FOR EACH ROW EXECUTE PROCEDURE update_modified_column();\n\nCREATE TRIGGER update_plans_modtime\n  BEFORE UPDATE ON plans\n  FOR EACH ROW EXECUTE PROCEDURE update_modified_column();\n```\n\nTesting approach: Insert test data into each table and verify relationships work correctly. Test foreign key constraints by attempting to delete referenced records.",
+          "status": "done",
+          "parentTaskId": 1
+        },
+        {
+          "id": 4,
+          "title": "Create Supporting Database Tables and Relationships",
+          "description": "Design and implement the supporting database tables (daily_tasks, chat_messages, micro_surveys, logged_data) with appropriate relationships, constraints, and indexes.",
+          "dependencies": [
+            3
+          ],
+          "details": "1. Create the daily_tasks table:\n```sql\nCREATE TABLE daily_tasks (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  plan_id UUID REFERENCES plans(id) ON DELETE CASCADE NOT NULL,\n  title TEXT NOT NULL,\n  description TEXT,\n  due_date DATE,\n  status TEXT NOT NULL CHECK (status IN ('pending', 'completed', 'skipped')),\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,\n  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL\n);\n\nCREATE INDEX idx_daily_tasks_plan_id ON daily_tasks(plan_id);\nCREATE INDEX idx_daily_tasks_status ON daily_tasks(status);\nCREATE INDEX idx_daily_tasks_due_date ON daily_tasks(due_date);\n```\n\n2. Create the chat_messages table:\n```sql\nCREATE TABLE chat_messages (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  user_id UUID REFERENCES profiles(id) NOT NULL,\n  content TEXT NOT NULL,\n  is_from_assistant BOOLEAN NOT NULL DEFAULT false,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL\n);\n\nCREATE INDEX idx_chat_messages_user_id ON chat_messages(user_id);\nCREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at);\n```\n\n3. Create the micro_surveys table:\n```sql\nCREATE TABLE micro_surveys (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  user_id UUID REFERENCES profiles(id) NOT NULL,\n  question TEXT NOT NULL,\n  response TEXT,\n  response_date TIMESTAMP WITH TIME ZONE,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL\n);\n\nCREATE INDEX idx_micro_surveys_user_id ON micro_surveys(user_id);\n```\n\n4. Create the logged_data table:\n```sql\nCREATE TABLE logged_data (\n  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n  user_id UUID REFERENCES profiles(id) NOT NULL,\n  data_type TEXT NOT NULL,\n  data_value JSONB NOT NULL,\n  logged_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL\n);\n\nCREATE INDEX idx_logged_data_user_id ON logged_data(user_id);\nCREATE INDEX idx_logged_data_data_type ON logged_data(data_type);\nCREATE INDEX idx_logged_data_logged_at ON logged_data(logged_at);\n```\n\n5. Add updated_at triggers for all tables:\n```sql\nCREATE TRIGGER update_daily_tasks_modtime\n  BEFORE UPDATE ON daily_tasks\n  FOR EACH ROW EXECUTE PROCEDURE update_modified_column();\n```\n\nTesting approach: Insert test data into each table and verify relationships work correctly. Test cascading deletes and constraints by performing various operations on related records.",
+          "status": "done",
+          "parentTaskId": 1
+        },
+        {
+          "id": 5,
+          "title": "Implement Row Level Security Policies",
+          "description": "Configure Row Level Security (RLS) policies for all tables to ensure proper data access control and security.",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "1. Enable RLS on all tables:\n```sql\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;\nALTER TABLE plans ENABLE ROW LEVEL SECURITY;\nALTER TABLE daily_tasks ENABLE ROW LEVEL SECURITY;\nALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;\nALTER TABLE micro_surveys ENABLE ROW LEVEL SECURITY;\nALTER TABLE logged_data ENABLE ROW LEVEL SECURITY;\n```\n\n2. Create RLS policies for profiles table:\n```sql\n-- Users can view any profile\nCREATE POLICY \"Profiles are viewable by everyone\" \nON profiles FOR SELECT USING (true);\n\n-- Users can only update their own profile\nCREATE POLICY \"Users can update their own profile\" \nON profiles FOR UPDATE USING (auth.uid() = id);\n```\n\n3. Create RLS policies for plans table:\n```sql\n-- Users can view only their own plans\nCREATE POLICY \"Users can view their own plans\" \nON plans FOR SELECT USING (auth.uid() = user_id);\n\n-- Users can insert their own plans\nCREATE POLICY \"Users can insert their own plans\" \nON plans FOR INSERT WITH CHECK (auth.uid() = user_id);\n\n-- Users can update their own plans\nCREATE POLICY \"Users can update their own plans\" \nON plans FOR UPDATE USING (auth.uid() = user_id);\n\n-- Users can delete their own plans\nCREATE POLICY \"Users can delete their own plans\" \nON plans FOR DELETE USING (auth.uid() = user_id);\n```\n\n4. Create similar RLS policies for all other tables (daily_tasks, chat_messages, micro_surveys, logged_data) following the same pattern of restricting access to the user's own data.\n\n5. For tables with relationships (like daily_tasks), create policies that join to the parent table:\n```sql\n-- Users can view their own daily tasks\nCREATE POLICY \"Users can view their own daily tasks\" \nON daily_tasks FOR SELECT \nUSING (\n  auth.uid() IN (\n    SELECT user_id FROM plans WHERE id = daily_tasks.plan_id\n  )\n);\n```\n\nTesting approach: Test RLS policies by creating multiple test users and verifying that each user can only access their own data. Test with both the anon key and service role key to ensure policies are working correctly.",
+          "status": "done",
+          "parentTaskId": 1
+        },
+        {
+          "id": 6,
+          "title": "Test Database Operations and Document Schema",
+          "description": "Test CRUD operations on all tables, verify RLS policies are working correctly, and create comprehensive documentation for the database schema and access patterns.",
+          "dependencies": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "details": "1. Create a test script to verify CRUD operations on all tables:\n```javascript\nasync function testDatabaseOperations() {\n  // Test user authentication\n  const { data: authData, error: authError } = await supabase.auth.signUp({\n    email: 'test@example.com',\n    password: 'password123'\n  })\n  \n  // Test profile operations\n  const { data: profileData, error: profileError } = await supabase\n    .from('profiles')\n    .select('*')\n    .eq('id', authData.user.id)\n    .single()\n  \n  // Test plan operations\n  const { data: planData, error: planError } = await supabase\n    .from('plans')\n    .insert([\n      { \n        user_id: authData.user.id,\n        title: 'Test Plan',\n        description: 'Test Description',\n        start_date: new Date().toISOString().split('T')[0],\n        status: 'active'\n      }\n    ])\n    .select()\n  \n  // Continue with tests for other tables...\n}\n```\n\n2. Test RLS policies by attempting unauthorized access:\n```javascript\nasync function testRLSPolicies() {\n  // Create two test users\n  const { data: user1 } = await supabase.auth.signUp({...})\n  const { data: user2 } = await supabase.auth.signUp({...})\n  \n  // Create data for user1\n  await supabase.auth.setSession(user1.session)\n  const { data: plan1 } = await supabase.from('plans').insert([...])\n  \n  // Try to access user1's data as user2\n  await supabase.auth.setSession(user2.session)\n  const { data, error } = await supabase\n    .from('plans')\n    .select('*')\n    .eq('id', plan1[0].id)\n  \n  // Should return empty array or error due to RLS\n  console.log(data, error)\n}\n```\n\n3. Create comprehensive schema documentation:\n   - Create an Entity-Relationship Diagram (ERD) using a tool like dbdiagram.io or Lucidchart\n   - Document each table's purpose, columns, constraints, and relationships\n   - Document RLS policies and access patterns\n   - Document common queries and operations\n   - Include examples of how to perform CRUD operations on each table\n\n4. Create a database migration script or use Supabase migrations:\n```bash\nnpx supabase migration new initial_schema\n```\n\n5. Document the authentication flow and how it integrates with the database schema\n\nTesting approach: Run comprehensive tests on all tables and relationships. Verify that RLS policies correctly restrict access. Test edge cases like cascading deletes and constraint violations.",
+          "status": "done",
+          "parentTaskId": 1
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Implement User Authentication and Profile Management",
+      "description": "Create the frontend authentication flow and profile management functionality using Supabase Auth.",
+      "status": "pending",
+      "dependencies": [
+        1
+      ],
+      "priority": "high",
+      "details": "1. Set up React project with Vite\n2. Install required dependencies: react-router-dom, @supabase/supabase-js, TanStack Query, and UI library (Tailwind CSS + Headless UI)\n3. Create authentication components (SignUp, Login forms) with clean Tailwind CSS styling\n4. Implement protected routes using react-router-dom\n5. Create a Settings page for profile management\n6. Connect authentication components to Supabase Auth\n7. Implement profile data fetching and updating functionality\n8. Add form validation and error handling\n9. Allow users to update their username and other profile information (e.g. agent_ask_preference)",
+      "testStrategy": "Test user registration, login, and logout flows. Verify that protected routes redirect unauthenticated users. Ensure profile data is correctly saved and retrieved from the database. Verify that username and profile preferences can be updated successfully.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Set up React project with Vite and install dependencies",
+          "description": "Initialize a new React project using Vite and install all required dependencies for the authentication system",
+          "dependencies": [],
+          "details": "1. Install Node.js and npm if not already installed\n2. Run `npm create vite@latest my-auth-app -- --template react-ts` to create a new React project with TypeScript\n3. Navigate to the project directory: `cd my-auth-app`\n4. Install routing: `npm install react-router-dom`\n5. Install Supabase client: `npm install @supabase/supabase-js`\n6. Install TanStack Query: `npm install @tanstack/react-query`\n7. Set up Tailwind CSS: `npm install -D tailwindcss postcss autoprefixer` and run `npx tailwindcss init -p`\n8. Install Headless UI: `npm install @headlessui/react`\n9. Create a `.env` file with Supabase URL and anon key\n10. Create a Supabase client utility file\n11. Test the setup by running `npm run dev` and ensuring the app starts without errors",
+          "status": "done",
+          "parentTaskId": 2
+        },
+        {
+          "id": 2,
+          "title": "Create authentication components and forms",
+          "description": "Build the UI components for user authentication including signup and login forms with proper styling",
+          "dependencies": [
+            1
+          ],
+          "details": "1. Create a `components/auth` directory\n2. Build a `SignUpForm.tsx` component with:\n   - Email and password fields\n   - Confirm password field\n   - Submit button\n   - Link to login page\n3. Build a `LoginForm.tsx` component with:\n   - Email and password fields\n   - Submit button\n   - Link to signup page\n   - 'Forgot password' option\n4. Create a `ResetPassword.tsx` component\n5. Style all components using Tailwind CSS\n6. Add basic client-side validation (required fields, password matching)\n7. Test the UI rendering and form interactions without backend integration",
+          "status": "done",
+          "parentTaskId": 2
+        },
+        {
+          "id": 3,
+          "title": "Implement Supabase authentication integration",
+          "description": "Connect the authentication forms to Supabase Auth service and implement the core authentication functionality",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "1. Create an `auth` service directory with authentication utility functions\n2. Implement `signUp` function using Supabase's `auth.signUp`\n3. Implement `signIn` function using Supabase's `auth.signInWithPassword`\n4. Implement `signOut` function using Supabase's `auth.signOut`\n5. Implement `resetPassword` function\n6. Create a React context for authentication state\n7. Build a custom hook `useAuth` that provides authentication methods and user state\n8. Connect the SignUp and Login forms to these authentication functions\n9. Add loading states and error handling\n10. Test the complete authentication flow with Supabase\n\n<info added on 2025-05-09T06:51:27.491Z>\nFor the \"Implement Supabase authentication integration\" subtask, here's additional information to add:\n\n### Implementation Notes:\n\n1. **Form Connection Implementation:**\n   - Use React's `useState` for form field management and validation states\n   - Implement form submission handlers that call the appropriate `useAuth` methods:\n   ```tsx\n   const { signUp, loading, error } = useAuth();\n   const handleSubmit = async (e) => {\n     e.preventDefault();\n     await signUp(email, password);\n   };\n   ```\n\n2. **Loading & Error State Management:**\n   - Create reusable loading indicators for auth forms:\n   ```tsx\n   {loading && <Spinner size=\"sm\" color=\"primary\" />}\n   ```\n   - Implement error display components that handle different error types:\n   ```tsx\n   {error && <Alert variant=\"destructive\">{formatAuthError(error.message)}</Alert>}\n   ```\n   - Add a utility function `formatAuthError()` to convert Supabase error codes to user-friendly messages\n\n3. **Testing Checklist:**\n   - Test signup with valid/invalid email formats\n   - Test password requirements enforcement\n   - Verify email confirmation flow works correctly\n   - Test sign-in with non-existent accounts\n   - Test password reset flow end-to-end\n   - Verify auth persistence across page refreshes\n   - Test protected route redirects for unauthenticated users\n\n4. **Security Considerations:**\n   - Implement CSRF protection for auth forms\n   - Add rate limiting for failed login attempts\n   - Ensure proper input sanitization before submission\n</info added on 2025-05-09T06:51:27.491Z>\n\n<info added on 2025-05-09T06:51:55.427Z>\n### Implementation Notes for Testing Authentication Flow\n\n1. **End-to-End Authentication Testing:**\n   - Create a test plan document covering all authentication scenarios\n   - Set up a dedicated Supabase project for testing with predictable test data\n   - Use Cypress or Playwright for automated E2E testing of the complete auth flow:\n   ```javascript\n   // Example Cypress test for authentication flow\n   describe('Authentication Flow', () => {\n     it('should allow user to sign up, confirm email, and login', () => {\n       // Sign up test\n       cy.visit('/signup');\n       cy.get('[data-test=\"email-input\"]').type('test@example.com');\n       cy.get('[data-test=\"password-input\"]').type('SecurePassword123!');\n       cy.get('[data-test=\"signup-button\"]').click();\n       cy.get('[data-test=\"success-message\"]').should('be.visible');\n       \n       // Email confirmation simulation\n       cy.task('confirmEmail', 'test@example.com'); // Custom task to simulate email confirmation\n       \n       // Login test after confirmation\n       cy.visit('/login');\n       cy.get('[data-test=\"email-input\"]').type('test@example.com');\n       cy.get('[data-test=\"password-input\"]').type('SecurePassword123!');\n       cy.get('[data-test=\"login-button\"]').click();\n       cy.url().should('include', '/dashboard');\n     });\n   });\n   ```\n\n2. **Manual Testing Checklist:**\n   - Verify email templates are correctly configured in Supabase dashboard\n   - Test authentication with various browsers and devices\n   - Verify session persistence works correctly after browser refresh\n   - Test authentication timeout and automatic logout functionality\n   - Verify redirect behavior for protected routes\n\n3. **Edge Case Testing:**\n   - Test account recovery for users who haven't confirmed their email\n   - Verify handling of concurrent login attempts from multiple devices\n   - Test behavior when Supabase service is temporarily unavailable\n   - Verify proper cleanup of auth state during logout\n\n4. **Documentation:**\n   - Document any Supabase-specific configuration required for auth flows\n   - Create troubleshooting guide for common authentication issues\n</info added on 2025-05-09T06:51:55.427Z>",
+          "status": "done",
+          "parentTaskId": 2
+        },
+        {
+          "id": 4,
+          "title": "Set up protected routes and navigation",
+          "description": "Implement route protection to restrict access to authenticated users and create the application's routing structure",
+          "dependencies": [
+            3
+          ],
+          "details": "1. Create a `routes` directory to organize application routes\n2. Set up the main router using `createBrowserRouter` from react-router-dom\n3. Create route definitions for public pages (login, signup, reset password)\n4. Create route definitions for protected pages (dashboard, profile, settings)\n5. Implement a `ProtectedRoute` component that:\n   - Checks if user is authenticated using the auth context\n   - Redirects to login if not authenticated\n   - Renders the protected component if authenticated\n6. Create a navigation component with links to different sections\n7. Implement a logout button in the navigation\n8. Test route protection by attempting to access protected routes when logged out\n\n<info added on 2025-05-07T07:27:33.156Z>\n## Enhanced Implementation Details\n\n### Router Configuration\n```tsx\n// src/router.tsx\nimport { createBrowserRouter, RouterProvider } from 'react-router-dom';\nimport ProtectedRoute from './components/auth/ProtectedRoute';\nimport Layout from './components/layout/Layout';\nimport LoginPage from './pages/LoginPage';\nimport SignupPage from './pages/SignupPage';\nimport ResetPasswordPage from './pages/ResetPasswordPage';\nimport DashboardPage from './pages/DashboardPage';\nimport ProfilePage from './pages/ProfilePage';\nimport SettingsPage from './pages/SettingsPage';\n\nconst router = createBrowserRouter([\n  {\n    path: '/',\n    element: <Layout />,\n    children: [\n      // Public routes\n      { path: 'login', element: <LoginPage /> },\n      { path: 'signup', element: <SignupPage /> },\n      { path: 'reset-password', element: <ResetPasswordPage /> },\n      \n      // Protected routes\n      { \n        path: '/', \n        element: <ProtectedRoute><DashboardPage /></ProtectedRoute> \n      },\n      { \n        path: 'profile', \n        element: <ProtectedRoute><ProfilePage /></ProtectedRoute> \n      },\n      { \n        path: 'settings', \n        element: <ProtectedRoute><SettingsPage /></ProtectedRoute> \n      },\n    ]\n  }\n]);\n\nexport default function Router() {\n  return <RouterProvider router={router} />;\n}\n```\n\n### ProtectedRoute Component\n```tsx\n// src/components/auth/ProtectedRoute.tsx\nimport { Navigate, useLocation } from 'react-router-dom';\nimport { useAuth } from '../../contexts/AuthContext';\n\ninterface ProtectedRouteProps {\n  children: React.ReactNode;\n}\n\nexport default function ProtectedRoute({ children }: ProtectedRouteProps) {\n  const { isAuthenticated, isLoading } = useAuth();\n  const location = useLocation();\n  \n  // Show loading state while auth state is being determined\n  if (isLoading) {\n    return <div>Loading authentication status...</div>;\n  }\n  \n  // Redirect to login if not authenticated, preserving the intended destination\n  if (!isAuthenticated) {\n    return <Navigate to=\"/login\" state={{ from: location.pathname }} replace />;\n  }\n  \n  // Render children if authenticated\n  return <>{children}</>;\n}\n```\n\n### Navigation Component with Authentication State\n```tsx\n// src/components/layout/Navbar.tsx\nimport { Link, useNavigate } from 'react-router-dom';\nimport { useAuth } from '../../contexts/AuthContext';\n\nexport default function Navbar() {\n  const { isAuthenticated, logout } = useAuth();\n  const navigate = useNavigate();\n  \n  const handleLogout = async () => {\n    await logout();\n    navigate('/login');\n  };\n  \n  return (\n    <nav className=\"navbar\">\n      <div className=\"logo\">\n        <Link to=\"/\">App Name</Link>\n      </div>\n      \n      <div className=\"nav-links\">\n        {isAuthenticated ? (\n          <>\n            <Link to=\"/\">Dashboard</Link>\n            <Link to=\"/profile\">Profile</Link>\n            <Link to=\"/settings\">Settings</Link>\n            <button onClick={handleLogout} className=\"logout-btn\">Logout</button>\n          </>\n        ) : (\n          <>\n            <Link to=\"/login\">Login</Link>\n            <Link to=\"/signup\">Sign Up</Link>\n          </>\n        )}\n      </div>\n    </nav>\n  );\n}\n```\n\n### Testing Route Protection\n```typescript\n// Test cases to implement\n// 1. Verify redirect to login when accessing protected route while logged out\n// 2. Verify access to protected route when authenticated\n// 3. Verify logout functionality clears auth state and redirects\n\n// Example test with React Testing Library\nimport { render, screen } from '@testing-library/react';\nimport { MemoryRouter } from 'react-router-dom';\nimport { AuthProvider } from '../../contexts/AuthContext';\nimport App from '../../App';\n\ntest('redirects to login when accessing protected route while logged out', () => {\n  render(\n    <AuthProvider initialAuthState={{ isAuthenticated: false }}>\n      <MemoryRouter initialEntries={['/profile']}>\n        <App />\n      </MemoryRouter>\n    </AuthProvider>\n  );\n  \n  // Should redirect to login page\n  expect(screen.getByText(/login to your account/i)).toBeInTheDocument();\n});\n```\n</info added on 2025-05-07T07:27:33.156Z>",
+          "status": "done",
+          "parentTaskId": 2
+        },
+        {
+          "id": 5,
+          "title": "Create profile management UI and functionality",
+          "description": "Build the user profile management interface and connect it to Supabase for data operations",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "1. Create a `ProfilePage.tsx` component in the pages directory\n2. Design the profile form with fields for:\n   - Display name\n   - Email (display only)\n   - Avatar upload\n   - Bio/description\n   - Username\n   - Agent ask preference\n3. Implement a `useProfile` hook using TanStack Query to:\n   - Fetch profile data from Supabase\n   - Update profile data\n4. Create an avatar upload component that:\n   - Allows image selection\n   - Handles image preview\n   - Uploads to Supabase storage\n5. Connect the profile form to the data fetching and updating functions\n6. Add loading states during data operations\n7. Test the profile management functionality with real data\n8. Create a `SettingsPage.tsx` component with clean Tailwind CSS styling\n9. Implement form controls for updating username and agent_ask_preference\n10. Add form validation for username (required, character limits, etc.)\n11. Connect settings form to the profile update functionality\n12. Add success/error notifications for settings updates\n\n---\n[2024-05-09] Exploration & Planning Log\n\n1. Current State of the Codebase\n- The router defines a /profile route, but it currently uses a placeholder component (ProfilePage = () => <div>Profile Page (Protected)</div>).\n- There is no actual src/pages/ProfilePage.tsx file or real profile management UI yet.\n- The Navbar includes a link to /profile, so navigation is already in place.\n- AuthContext exists for authentication state (src/contexts/AuthContext.tsx).\n- supabaseClient.ts exists for Supabase access (src/lib/supabaseClient.ts).\n- No existing useProfile hook or profile service was found.\n- No avatar upload or profile form components exist yet.\n\n2. What Needs to Be Built\n- ProfilePage component (src/pages/ProfilePage.tsx) as a protected page.\n- UI for display name, email (read-only), avatar upload, and bio/description.\n- useProfile hook using TanStack Query for fetching/updating profile data from Supabase.\n- Profile update logic (likely in a new src/services/profile.ts).\n- AvatarUpload component for image selection, preview, and upload to Supabase Storage.\n- Form with fields for display name, bio, and avatar; email as read-only.\n- Loading and error states.\n- Test with real Supabase data; ensure only authenticated user can update their profile.\n\n3. Potential Challenges\n- Handling Supabase Storage for avatar uploads (permissions, URL retrieval).\n- Ensuring profile updates are atomic and error-handled.\n- Keeping the UI responsive and accessible.\n\n4. Next Steps\n1. Create src/pages/ProfilePage.tsx with a basic form layout.\n2. Implement the useProfile hook for data fetching/updating.\n3. Build the AvatarUpload component.\n4. Connect the form to Supabase via the hook/service.\n5. Add loading, error, and success feedback.\n6. Test the full flow with a real user.\n\nThis plan follows the dev_workflow recommendations: initial exploration, detailed plan, and logging before implementation.",
+          "status": "pending",
+          "parentTaskId": 2
+        },
+        {
+          "id": 6,
+          "title": "Implement form validation and error handling",
+          "description": "Add comprehensive validation and error handling to all authentication and profile forms",
+          "dependencies": [
+            2,
+            3,
+            5
+          ],
+          "details": "1. Create a validation utility file with reusable validation functions\n2. Implement client-side validation for:\n   - Email format validation\n   - Password strength requirements\n   - Required fields\n   - Username format and uniqueness\n3. Add error message components that display validation errors\n4. Implement form submission validation\n5. Create an error boundary component to catch and display unexpected errors\n6. Add toast notifications for success/error feedback using a library like react-hot-toast\n7. Handle Supabase error responses and display user-friendly messages\n8. Implement proper error logging\n9. Test all validation rules and error scenarios\n10. Ensure accessibility of error messages\n11. Add specific validation for profile settings (username character limits, etc.)",
+          "status": "pending",
+          "parentTaskId": 2
+        },
+        {
+          "id": 7,
+          "title": "Enhance authentication components with Tailwind CSS styling",
+          "description": "Apply clean and consistent Tailwind CSS styling to the authentication components for better user experience",
+          "dependencies": [
+            2
+          ],
+          "details": "1. Review existing SignUp and Login form components\n2. Create a consistent styling approach using Tailwind CSS classes\n3. Apply styling to form containers:\n   - Add appropriate padding, margin, and border-radius\n   - Use shadow effects for depth\n   - Implement responsive design for different screen sizes\n4. Style form inputs:\n   - Consistent height, padding, and border styles\n   - Focus states with appropriate highlighting\n   - Error states with visual indicators\n5. Style buttons:\n   - Primary action buttons with brand colors\n   - Secondary/tertiary buttons with appropriate styling\n   - Hover and active states\n6. Add transitions and micro-interactions for better UX\n7. Ensure proper spacing between form elements\n8. Implement responsive adjustments for mobile devices\n9. Test styling across different browsers and screen sizes\n10. Ensure all styled components maintain accessibility standards",
+          "status": "pending",
+          "parentTaskId": 2
+        },
+        {
+          "id": 8,
+          "title": "Create Settings page with profile preferences",
+          "description": "Build a dedicated Settings page allowing users to update their username and agent_ask_preference with clean Tailwind CSS styling",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "1. Create a `SettingsPage.tsx` component in the pages directory\n2. Design the settings form with fields for:\n   - Username (with validation)\n   - Agent ask preference (dropdown or toggle options)\n   - Other relevant profile settings from the PRD\n3. Apply consistent Tailwind CSS styling:\n   - Clean card-based layout with appropriate spacing\n   - Consistent input styling matching other forms\n   - Clear section headings and descriptions\n4. Connect the settings form to the profile data service\n5. Implement save/cancel functionality with proper loading states\n6. Add success/error notifications for settings updates\n7. Ensure the page is fully responsive\n8. Add form validation for all fields\n9. Test the settings update functionality with real data\n10. Ensure accessibility of all form controls",
+          "status": "pending",
+          "parentTaskId": 2
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Develop Onboarding Quiz Wizard",
+      "description": "Create the multi-step onboarding questionnaire to gather initial user data for personalization.",
+      "status": "pending",
+      "dependencies": [
+        2
+      ],
+      "priority": "high",
+      "details": "1. Design the wizard UI with step indicators and navigation controls\n2. Create ~7 core questions mixing MCQ and open-ended formats\n3. Implement state management for the wizard using Zustand or Context API\n4. Set up Supabase Function for processing onboarding answers\n5. Integrate with external LLM API (Claude/GPT/Gemini) for potential dynamic follow-up questions\n6. Store collected data in the user's profile\n7. Implement progress saving to allow users to continue later\n8. Add validation for required fields",
+      "testStrategy": "Test the wizard flow with various input combinations. Verify data is correctly saved to the profile. Test the dynamic follow-up question functionality with different initial responses."
+    },
+    {
+      "id": 4,
+      "title": "Implement Plan Generation Logic",
+      "description": "Develop the backend logic to generate personalized wellness plans using AI based on user profile data.",
+      "status": "pending",
+      "dependencies": [
+        3
+      ],
+      "priority": "high",
+      "details": "1. Set up Supabase Functions environment with Node.js/TypeScript\n2. Create a function to process user profile data for AI consumption\n3. Develop prompt engineering for the external LLM API (Claude/GPT/Gemini)\n4. Implement plan generation logic for Exercise, Nutrition, and Sleep sections\n5. Structure the AI responses into consistent JSON format\n6. Save generated plans to the plans table with appropriate metadata\n7. Implement error handling and retry logic for API failures\n8. Add logging for monitoring API usage and costs",
+      "testStrategy": "Test plan generation with various user profiles. Verify the structure and quality of generated plans. Monitor API usage and costs. Test error handling by simulating API failures."
+    },
+    {
+      "id": 5,
+      "title": "Create Plan Display UI",
+      "description": "Develop the interface for displaying the generated wellness plans to users.",
+      "status": "pending",
+      "dependencies": [
+        4
+      ],
+      "priority": "medium",
+      "details": "1. Design a clean, intuitive UI for plan display using tabs or accordions\n2. Create components for each plan section (Exercise, Nutrition, Sleep)\n3. Implement data fetching from the plans table using TanStack Query to retrieve user's plan data\n4. Add loading states and error handling\n5. Create a responsive layout that works well on different devices\n6. Implement the Plan Display UI as a single frontend page\n7. Apply basic Tailwind CSS styling for readability and presentation\n8. Ensure accessibility compliance",
+      "testStrategy": "Test the UI on different screen sizes. Verify that all plan sections (Exercise, Nutrition, Sleep) are correctly displayed. Test loading states and error handling. Ensure the tabs or accordions function properly. Verify that Tailwind CSS styling is applied correctly. Conduct accessibility testing."
+    },
+    {
+      "id": 6,
+      "title": "Implement Daily Task Generation and Display",
+      "description": "Create the logic to generate actionable daily tasks from plans and display them on the dashboard.",
+      "status": "pending",
+      "dependencies": [
+        4,
+        5
+      ],
+      "priority": "high",
+      "details": "1. Develop Supabase Function for daily task generation based on plans\n2. Implement prompt engineering for the LLM to create specific, actionable tasks\n3. Save generated tasks to the daily_tasks table\n4. Create the dashboard UI layout with task list section\n5. Implement task display components with completion checkboxes\n6. Add task completion functionality that updates the database\n7. Implement task filtering (e.g., by date, by plan type)\n8. Add visual feedback for task completion",
+      "testStrategy": "Test task generation with different plan types. Verify tasks are specific and actionable. Test task completion functionality. Verify database updates when tasks are completed."
+    },
+    {
+      "id": 7,
+      "title": "Develop AI Chatbot Coach",
+      "description": "Create the chatbot interface and backend logic for user interaction and support, including the ability for users to select different agent modes.",
+      "status": "pending",
+      "dependencies": [
+        6
+      ],
+      "priority": "medium",
+      "details": "1. Design and implement a prominent chat button on the dashboard that opens the chat interface\n2. Implement the chat UI with message history display using Tailwind CSS for styling\n3. Create a clean, usable chat experience with appropriate spacing, colors, and typography\n4. Implement a UI control (toggle or dropdown) within the Chatbot interface for users to select their preferred Agent/Ask mode\n5. Create Supabase Function for handling chat interactions with the LLM API\n6. Implement chat history storage in the chat_messages table\n7. Add context management to provide the AI with relevant user data\n8. Implement basic data logging via chat (meals, mood, etc.)\n9. Create typing indicators and loading states\n10. Add error handling and fallback responses\n11. Store and manage the user's Agent mode selection as part of the chat context\n12. Ensure the selected Agent mode persists across chat sessions for the same user",
+      "testStrategy": "Test the dashboard chat button functionality and UI appearance. Verify the chat interface opens correctly and displays properly with Tailwind styling. Test chat interactions with various queries. Verify chat history is correctly saved and displayed. Test the Agent/Ask mode toggle UI functionality. Test data logging functionality. Verify context management by checking if the AI references previous interactions. Test switching between different Agent modes and confirm the chatbot behavior changes appropriately. Verify that Agent mode selection persists between sessions."
+    },
+    {
+      "id": 8,
+      "title": "Implement Agent/Ask Model and Plan Updates",
+      "description": "Create the functionality for users to control how the AI handles plan updates and implement the plan update logic.",
+      "status": "pending",
+      "dependencies": [
+        7
+      ],
+      "priority": "medium",
+      "details": "1. Add Agent/Ask preference setting to the Settings page UI\n2. Update the profile schema to store this preference\n3. Enhance the chatbot function to respect the Agent/Ask setting\n4. Implement logic for the AI to suggest plan changes\n5. Create functionality to apply plan updates (updating plans table)\n6. Implement task regeneration after plan updates\n7. Add notifications or visual indicators for plan changes\n8. Create a history of plan versions",
+      "testStrategy": "Test all three Agent/Ask modes (automatic changes, suggested changes, discussion only). Verify plan updates are correctly applied to the database. Test task regeneration after plan updates."
+    },
+    {
+      "id": 9,
+      "title": "Develop Progressive Profiling and Micro-Surveys",
+      "description": "Implement the system for gathering additional user data over time through targeted questions.",
+      "status": "pending",
+      "dependencies": [
+        7,
+        8
+      ],
+      "priority": "low",
+      "details": "1. Implement trigger logic for micro-surveys (time-based, event-based, contextual)\n2. Create UI indicator on the chatbot button when a survey is pending\n   - Apply Tailwind CSS for styling the indicator\n   - Ensure indicator is visually distinct but non-intrusive\n3. Enhance the chatbot to present surveys and process responses\n   - Implement UI components for survey questions using Tailwind CSS\n   - Create smooth transitions between chat and survey modes\n   - Handle different question types (multiple choice, text input, etc.)\n4. Save survey responses to the micro_surveys table\n5. Update the user profile with new information\n6. Implement logic to avoid repetitive questions\n7. Create a backlog of potential questions for different contexts\n8. Add analytics tracking for survey completion",
+      "testStrategy": "Test different trigger types for micro-surveys. Verify survey responses are correctly saved and profile data is updated. Test the UI indicator for pending surveys. Ensure Tailwind CSS styling is responsive across different devices and screen sizes. Verify that the chatbot smoothly transitions between normal conversation and survey presentation."
+    },
+    {
+      "id": 10,
+      "title": "Implement Progress Tracking and Analytics",
+      "description": "Create the progress visualization components and set up analytics tracking for user interactions.",
+      "status": "pending",
+      "dependencies": [
+        6,
+        9
+      ],
+      "priority": "low",
+      "details": "1. Install and configure a charting library (Recharts)\n2. Implement basic line charts for key metrics (plan adherence, task completion)\n3. Create streak/count visuals for task completion\n4. Add data aggregation logic for the visualizations\n5. Develop a Progress Tracking Dashboard UI to display key metrics\n6. Fetch necessary data from backend for the dashboard\n7. Apply Tailwind CSS styling to the dashboard for clarity and visual appeal\n8. Set up external analytics platform (Mixpanel or Amplitude)\n9. Implement Supabase Functions to send tracking events\n10. Add event tracking for all key user interactions listed in the PRD\n11. Ensure responsive design for the visualizations across different screen sizes",
+      "testStrategy": "Test data visualization with different datasets. Verify dashboard displays correct metrics and updates properly. Ensure Tailwind CSS styling renders correctly across browsers. Verify analytics events are correctly sent to the external platform. Test the responsiveness of the visualizations on different screen sizes."
+    }
+  ],
+  "metadata": {
+    "projectName": "Holistic MVP Implementation",
+    "totalTasks": 10,
+    "sourceFile": "scripts/prd.txt",
+    "generatedAt": "2023-07-10"
+  }
+}

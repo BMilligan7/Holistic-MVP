@@ -127,5 +127,3 @@ scripts/task-complexity-report.json
 .DS_Store
 
 # Task files
-tasks.json
-tasks/

@@ -1,0 +1,23 @@
+# Task ID: 9
+# Title: Develop Progressive Profiling and Micro-Surveys
+# Status: pending
+# Dependencies: 7, 8
+# Priority: low
+# Description: Implement the system for gathering additional user data over time through targeted questions.
+# Details:
+1. Implement trigger logic for micro-surveys (time-based, event-based, contextual)
+2. Create UI indicator on the chatbot button when a survey is pending
+   - Apply Tailwind CSS for styling the indicator
+   - Ensure indicator is visually distinct but non-intrusive
+3. Enhance the chatbot to present surveys and process responses
+   - Implement UI components for survey questions using Tailwind CSS
+   - Create smooth transitions between chat and survey modes
+   - Handle different question types (multiple choice, text input, etc.)
+4. Save survey responses to the micro_surveys table
+5. Update the user profile with new information
+6. Implement logic to avoid repetitive questions
+7. Create a backlog of potential questions for different contexts
+8. Add analytics tracking for survey completion
+
+# Test Strategy:
+Test different trigger types for micro-surveys. Verify survey responses are correctly saved and profile data is updated. Test the UI indicator for pending surveys. Ensure Tailwind CSS styling is responsive across different devices and screen sizes. Verify that the chatbot smoothly transitions between normal conversation and survey presentation.

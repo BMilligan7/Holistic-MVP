@@ -1,0 +1,458 @@
+# Task ID: 2
+# Title: Implement User Authentication and Profile Management
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create the frontend authentication flow and profile management functionality using Supabase Auth.
+# Details:
+1. Set up React project with Vite
+2. Install required dependencies: react-router-dom, @supabase/supabase-js, TanStack Query, and UI library (Tailwind CSS + Headless UI)
+3. Create authentication components (SignUp, Login forms) with clean Tailwind CSS styling
+4. Implement protected routes using react-router-dom
+5. Create a Settings page for profile management
+6. Connect authentication components to Supabase Auth
+7. Implement profile data fetching and updating functionality
+8. Add form validation and error handling
+9. Allow users to update their username and other profile information (e.g. agent_ask_preference)
+
+# Test Strategy:
+Test user registration, login, and logout flows. Verify that protected routes redirect unauthenticated users. Ensure profile data is correctly saved and retrieved from the database. Verify that username and profile preferences can be updated successfully.
+
+# Subtasks:
+## 1. Set up React project with Vite and install dependencies [done]
+### Dependencies: None
+### Description: Initialize a new React project using Vite and install all required dependencies for the authentication system
+### Details:
+1. Install Node.js and npm if not already installed
+2. Run `npm create vite@latest my-auth-app -- --template react-ts` to create a new React project with TypeScript
+3. Navigate to the project directory: `cd my-auth-app`
+4. Install routing: `npm install react-router-dom`
+5. Install Supabase client: `npm install @supabase/supabase-js`
+6. Install TanStack Query: `npm install @tanstack/react-query`
+7. Set up Tailwind CSS: `npm install -D tailwindcss postcss autoprefixer` and run `npx tailwindcss init -p`
+8. Install Headless UI: `npm install @headlessui/react`
+9. Create a `.env` file with Supabase URL and anon key
+10. Create a Supabase client utility file
+11. Test the setup by running `npm run dev` and ensuring the app starts without errors
+
+## 2. Create authentication components and forms [done]
+### Dependencies: 2.1
+### Description: Build the UI components for user authentication including signup and login forms with proper styling
+### Details:
+1. Create a `components/auth` directory
+2. Build a `SignUpForm.tsx` component with:
+   - Email and password fields
+   - Confirm password field
+   - Submit button
+   - Link to login page
+3. Build a `LoginForm.tsx` component with:
+   - Email and password fields
+   - Submit button
+   - Link to signup page
+   - 'Forgot password' option
+4. Create a `ResetPassword.tsx` component
+5. Style all components using Tailwind CSS
+6. Add basic client-side validation (required fields, password matching)
+7. Test the UI rendering and form interactions without backend integration
+
+## 3. Implement Supabase authentication integration [done]
+### Dependencies: 2.1, 2.2
+### Description: Connect the authentication forms to Supabase Auth service and implement the core authentication functionality
+### Details:
+1. Create an `auth` service directory with authentication utility functions
+2. Implement `signUp` function using Supabase's `auth.signUp`
+3. Implement `signIn` function using Supabase's `auth.signInWithPassword`
+4. Implement `signOut` function using Supabase's `auth.signOut`
+5. Implement `resetPassword` function
+6. Create a React context for authentication state
+7. Build a custom hook `useAuth` that provides authentication methods and user state
+8. Connect the SignUp and Login forms to these authentication functions
+9. Add loading states and error handling
+10. Test the complete authentication flow with Supabase
+
+<info added on 2025-05-09T06:51:27.491Z>
+For the "Implement Supabase authentication integration" subtask, here's additional information to add:
+
+### Implementation Notes:
+
+1. **Form Connection Implementation:**
+   - Use React's `useState` for form field management and validation states
+   - Implement form submission handlers that call the appropriate `useAuth` methods:
+   ```tsx
+   const { signUp, loading, error } = useAuth();
+   const handleSubmit = async (e) => {
+     e.preventDefault();
+     await signUp(email, password);
+   };
+   ```
+
+2. **Loading & Error State Management:**
+   - Create reusable loading indicators for auth forms:
+   ```tsx
+   {loading && <Spinner size="sm" color="primary" />}
+   ```
+   - Implement error display components that handle different error types:
+   ```tsx
+   {error && <Alert variant="destructive">{formatAuthError(error.message)}</Alert>}
+   ```
+   - Add a utility function `formatAuthError()` to convert Supabase error codes to user-friendly messages
+
+3. **Testing Checklist:**
+   - Test signup with valid/invalid email formats
+   - Test password requirements enforcement
+   - Verify email confirmation flow works correctly
+   - Test sign-in with non-existent accounts
+   - Test password reset flow end-to-end
+   - Verify auth persistence across page refreshes
+   - Test protected route redirects for unauthenticated users
+
+4. **Security Considerations:**
+   - Implement CSRF protection for auth forms
+   - Add rate limiting for failed login attempts
+   - Ensure proper input sanitization before submission
+</info added on 2025-05-09T06:51:27.491Z>
+
+<info added on 2025-05-09T06:51:55.427Z>
+### Implementation Notes for Testing Authentication Flow
+
+1. **End-to-End Authentication Testing:**
+   - Create a test plan document covering all authentication scenarios
+   - Set up a dedicated Supabase project for testing with predictable test data
+   - Use Cypress or Playwright for automated E2E testing of the complete auth flow:
+   ```javascript
+   // Example Cypress test for authentication flow
+   describe('Authentication Flow', () => {
+     it('should allow user to sign up, confirm email, and login', () => {
+       // Sign up test
+       cy.visit('/signup');
+       cy.get('[data-test="email-input"]').type('test@example.com');
+       cy.get('[data-test="password-input"]').type('SecurePassword123!');
+       cy.get('[data-test="signup-button"]').click();
+       cy.get('[data-test="success-message"]').should('be.visible');
+       
+       // Email confirmation simulation
+       cy.task('confirmEmail', 'test@example.com'); // Custom task to simulate email confirmation
+       
+       // Login test after confirmation
+       cy.visit('/login');
+       cy.get('[data-test="email-input"]').type('test@example.com');
+       cy.get('[data-test="password-input"]').type('SecurePassword123!');
+       cy.get('[data-test="login-button"]').click();
+       cy.url().should('include', '/dashboard');
+     });
+   });
+   ```
+
+2. **Manual Testing Checklist:**
+   - Verify email templates are correctly configured in Supabase dashboard
+   - Test authentication with various browsers and devices
+   - Verify session persistence works correctly after browser refresh
+   - Test authentication timeout and automatic logout functionality
+   - Verify redirect behavior for protected routes
+
+3. **Edge Case Testing:**
+   - Test account recovery for users who haven't confirmed their email
+   - Verify handling of concurrent login attempts from multiple devices
+   - Test behavior when Supabase service is temporarily unavailable
+   - Verify proper cleanup of auth state during logout
+
+4. **Documentation:**
+   - Document any Supabase-specific configuration required for auth flows
+   - Create troubleshooting guide for common authentication issues
+</info added on 2025-05-09T06:51:55.427Z>
+
+## 4. Set up protected routes and navigation [done]
+### Dependencies: 2.3
+### Description: Implement route protection to restrict access to authenticated users and create the application's routing structure
+### Details:
+1. Create a `routes` directory to organize application routes
+2. Set up the main router using `createBrowserRouter` from react-router-dom
+3. Create route definitions for public pages (login, signup, reset password)
+4. Create route definitions for protected pages (dashboard, profile, settings)
+5. Implement a `ProtectedRoute` component that:
+   - Checks if user is authenticated using the auth context
+   - Redirects to login if not authenticated
+   - Renders the protected component if authenticated
+6. Create a navigation component with links to different sections
+7. Implement a logout button in the navigation
+8. Test route protection by attempting to access protected routes when logged out
+
+<info added on 2025-05-07T07:27:33.156Z>
+## Enhanced Implementation Details
+
+### Router Configuration
+```tsx
+// src/router.tsx
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Layout from './components/layout/Layout';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import DashboardPage from './pages/DashboardPage';
+import ProfilePage from './pages/ProfilePage';
+import SettingsPage from './pages/SettingsPage';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Layout />,
+    children: [
+      // Public routes
+      { path: 'login', element: <LoginPage /> },
+      { path: 'signup', element: <SignupPage /> },
+      { path: 'reset-password', element: <ResetPasswordPage /> },
+      
+      // Protected routes
+      { 
+        path: '/', 
+        element: <ProtectedRoute><DashboardPage /></ProtectedRoute> 
+      },
+      { 
+        path: 'profile', 
+        element: <ProtectedRoute><ProfilePage /></ProtectedRoute> 
+      },
+      { 
+        path: 'settings', 
+        element: <ProtectedRoute><SettingsPage /></ProtectedRoute> 
+      },
+    ]
+  }
+]);
+
+export default function Router() {
+  return <RouterProvider router={router} />;
+}
+```
+
+### ProtectedRoute Component
+```tsx
+// src/components/auth/ProtectedRoute.tsx
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+  
+  // Show loading state while auth state is being determined
+  if (isLoading) {
+    return <div>Loading authentication status...</div>;
+  }
+  
+  // Redirect to login if not authenticated, preserving the intended destination
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+  
+  // Render children if authenticated
+  return <>{children}</>;
+}
+```
+
+### Navigation Component with Authentication State
+```tsx
+// src/components/layout/Navbar.tsx
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+
+export default function Navbar() {
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+  
+  return (
+    <nav className="navbar">
+      <div className="logo">
+        <Link to="/">App Name</Link>
+      </div>
+      
+      <div className="nav-links">
+        {isAuthenticated ? (
+          <>
+            <Link to="/">Dashboard</Link>
+            <Link to="/profile">Profile</Link>
+            <Link to="/settings">Settings</Link>
+            <button onClick={handleLogout} className="logout-btn">Logout</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link>
+            <Link to="/signup">Sign Up</Link>
+          </>
+        )}
+      </div>
+    </nav>
+  );
+}
+```
+
+### Testing Route Protection
+```typescript
+// Test cases to implement
+// 1. Verify redirect to login when accessing protected route while logged out
+// 2. Verify access to protected route when authenticated
+// 3. Verify logout functionality clears auth state and redirects
+
+// Example test with React Testing Library
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '../../contexts/AuthContext';
+import App from '../../App';
+
+test('redirects to login when accessing protected route while logged out', () => {
+  render(
+    <AuthProvider initialAuthState={{ isAuthenticated: false }}>
+      <MemoryRouter initialEntries={['/profile']}>
+        <App />
+      </MemoryRouter>
+    </AuthProvider>
+  );
+  
+  // Should redirect to login page
+  expect(screen.getByText(/login to your account/i)).toBeInTheDocument();
+});
+```
+</info added on 2025-05-07T07:27:33.156Z>
+
+## 5. Create profile management UI and functionality [done]
+### Dependencies: 2.3, 2.4
+### Description: Build the user profile management interface and connect it to Supabase for data operations
+### Details:
+1. Create a `ProfilePage.tsx` component in the pages directory
+2. Design the profile form with fields for:
+   - Display name
+   - Email (display only)
+   - Avatar upload
+   - Bio/description
+   - Username
+   - Agent ask preference
+3. Implement a `useProfile` hook using TanStack Query to:
+   - Fetch profile data from Supabase
+   - Update profile data
+4. Create an avatar upload component that:
+   - Allows image selection
+   - Handles image preview
+   - Uploads to Supabase storage
+5. Connect the profile form to the data fetching and updating functions
+6. Add loading states during data operations
+7. Test the profile management functionality with real data
+8. Create a `SettingsPage.tsx` component with clean Tailwind CSS styling
+9. Implement form controls for updating username and agent_ask_preference
+10. Add form validation for username (required, character limits, etc.)
+11. Connect settings form to the profile update functionality
+12. Add success/error notifications for settings updates
+
+---
+[2024-05-09] Exploration & Planning Log
+
+1. Current State of the Codebase
+- The router defines a /profile route, but it currently uses a placeholder component (ProfilePage = () => <div>Profile Page (Protected)</div>).
+- There is no actual src/pages/ProfilePage.tsx file or real profile management UI yet.
+- The Navbar includes a link to /profile, so navigation is already in place.
+- AuthContext exists for authentication state (src/contexts/AuthContext.tsx).
+- supabaseClient.ts exists for Supabase access (src/lib/supabaseClient.ts).
+- No existing useProfile hook or profile service was found.
+- No avatar upload or profile form components exist yet.
+
+2. What Needs to Be Built
+- ProfilePage component (src/pages/ProfilePage.tsx) as a protected page.
+- UI for display name, email (read-only), avatar upload, and bio/description.
+- useProfile hook using TanStack Query for fetching/updating profile data from Supabase.
+- Profile update logic (likely in a new src/services/profile.ts).
+- AvatarUpload component for image selection, preview, and upload to Supabase Storage.
+- Form with fields for display name, bio, and avatar; email as read-only.
+- Loading and error states.
+- Test with real Supabase data; ensure only authenticated user can update their profile.
+
+3. Potential Challenges
+- Handling Supabase Storage for avatar uploads (permissions, URL retrieval).
+- Ensuring profile updates are atomic and error-handled.
+- Keeping the UI responsive and accessible.
+
+4. Next Steps
+1. Create src/pages/ProfilePage.tsx with a basic form layout.
+2. Implement the useProfile hook for data fetching/updating.
+3. Build the AvatarUpload component.
+4. Connect the form to Supabase via the hook/service.
+5. Add loading, error, and success feedback.
+6. Test the full flow with a real user.
+
+This plan follows the dev_workflow recommendations: initial exploration, detailed plan, and logging before implementation.
+
+## 6. Implement form validation and error handling [done]
+### Dependencies: 2.2, 2.3, 2.5
+### Description: Add comprehensive validation and error handling to all authentication and profile forms
+### Details:
+1. Create a validation utility file with reusable validation functions
+2. Implement client-side validation for:
+   - Email format validation
+   - Password strength requirements
+   - Required fields
+   - Username format and uniqueness
+3. Add error message components that display validation errors
+4. Implement form submission validation
+5. Create an error boundary component to catch and display unexpected errors
+6. Add toast notifications for success/error feedback using a library like react-hot-toast
+7. Handle Supabase error responses and display user-friendly messages
+8. Implement proper error logging
+9. Test all validation rules and error scenarios
+10. Ensure accessibility of error messages
+11. Add specific validation for profile settings (username character limits, etc.)
+
+## 7. Enhance authentication components with Tailwind CSS styling [done]
+### Dependencies: 2.2
+### Description: Apply clean and consistent Tailwind CSS styling to the authentication components for better user experience
+### Details:
+1. Review existing SignUp and Login form components
+2. Create a consistent styling approach using Tailwind CSS classes
+3. Apply styling to form containers:
+   - Add appropriate padding, margin, and border-radius
+   - Use shadow effects for depth
+   - Implement responsive design for different screen sizes
+4. Style form inputs:
+   - Consistent height, padding, and border styles
+   - Focus states with appropriate highlighting
+   - Error states with visual indicators
+5. Style buttons:
+   - Primary action buttons with brand colors
+   - Secondary/tertiary buttons with appropriate styling
+   - Hover and active states
+6. Add transitions and micro-interactions for better UX
+7. Ensure proper spacing between form elements
+8. Implement responsive adjustments for mobile devices
+9. Test styling across different browsers and screen sizes
+10. Ensure all styled components maintain accessibility standards
+<info added on 2025-05-12T23:12:47.454Z>
+1. Review existing SignUp and Login form components\n2. Create a consistent styling approach using Tailwind CSS classes\n3. Apply styling to form containers:\n   - Add appropriate padding, margin, and border-radius\n   - Use shadow effects for depth\n   - Implement responsive design for different screen sizes\n4. Style form inputs:\n   - Consistent height, padding, and border styles\n   - Focus states with appropriate highlighting\n   - Error states with visual indicators\n5. Style buttons:\n   - Primary action buttons with brand colors\n   - Secondary/tertiary buttons with appropriate styling\n   - Hover and active states\n6. Add transitions and micro-interactions for better UX\n7. Ensure proper spacing between form elements\n8. Implement responsive adjustments for mobile devices\n9. Test styling across different browsers and screen sizes\n10. Ensure all styled components maintain accessibility standards\n\nImplementation Plan for Styling Enhancement:\n\nTarget Files:\n- src/components/auth/SignUpForm.tsx\n- src/components/auth/LoginForm.tsx\n\nDetailed Class Changes:\n\n1. Container Styling:\n   - Current: max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md\n   - Enhanced: max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg border border-gray-200\n   - Improvements: Increased padding, stronger shadow effect, added subtle border\n\n2. Input Field Styling:\n   - Current: shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline\n   - Enhanced: appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out\n   - Error State: border-red-500 focus:ring-red-500 focus:border-red-500\n   - Improvements: Better focus states with ring effect, smoother transitions, clearer error states\n\n3. Label Styling:\n   - Current: block text-gray-700 text-sm font-bold mb-2\n   - Enhanced: block text-sm font-medium text-gray-700 mb-1\n   - Improvements: More balanced font weight, optimized spacing\n\n4. Button Styling:\n   - Current: bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50\n   - Enhanced: w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition duration-150 ease-in-out\n   - Improvements: Full width for better mobile experience, indigo color scheme for brand consistency, improved focus states, smooth transitions\n\n5. Link Styling:\n   - Current: inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800\n   - Enhanced: font-medium text-indigo-600 hover:text-indigo-500 text-sm\n   - Improvements: Consistent color scheme with buttons, balanced font weight\n\n6. Error/Success Message Styling:\n   - Current: text-red-500 text-sm mb-4 / text-green-500 text-sm mb-4\n   - Enhanced: text-red-600 text-sm mb-4 text-center / text-green-600 text-sm mb-4 text-center\n   - Improvements: Darker, more accessible text colors, centered alignment for better readability\n\n7. Component Spacing:\n   - Standardize vertical spacing between form groups using mb-4 or mb-5 consistently\n   - Ensure proper spacing between related elements for visual hierarchy\n\nNote: No changes needed for page wrapper components (SignupPage.tsx, LoginPage.tsx) as they already provide appropriate centering and background styling.
+</info added on 2025-05-12T23:12:47.454Z>
+
+## 8. Create Settings page with profile preferences [pending]
+### Dependencies: 2.3, 2.4
+### Description: Build a dedicated Settings page allowing users to update their username and agent_ask_preference with clean Tailwind CSS styling
+### Details:
+1. Create a `SettingsPage.tsx` component in the pages directory
+2. Design the settings form with fields for:
+   - Username (with validation)
+   - Agent ask preference (dropdown or toggle options)
+   - Other relevant profile settings from the PRD
+3. Apply consistent Tailwind CSS styling:
+   - Clean card-based layout with appropriate spacing
+   - Consistent input styling matching other forms
+   - Clear section headings and descriptions
+4. Connect the settings form to the profile data service
+5. Implement save/cancel functionality with proper loading states
+6. Add success/error notifications for settings updates
+7. Ensure the page is fully responsive
+8. Add form validation for all fields
+9. Test the settings update functionality with real data
+10. Ensure accessibility of all form controls
+

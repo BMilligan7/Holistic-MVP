@@ -1,0 +1,18 @@
+# Task ID: 8
+# Title: Implement Agent/Ask Model and Plan Updates
+# Status: pending
+# Dependencies: 7
+# Priority: medium
+# Description: Create the functionality for users to control how the AI handles plan updates and implement the plan update logic.
+# Details:
+1. Add Agent/Ask preference setting to the Settings page UI
+2. Update the profile schema to store this preference
+3. Enhance the chatbot function to respect the Agent/Ask setting
+4. Implement logic for the AI to suggest plan changes
+5. Create functionality to apply plan updates (updating plans table)
+6. Implement task regeneration after plan updates
+7. Add notifications or visual indicators for plan changes
+8. Create a history of plan versions
+
+# Test Strategy:
+Test all three Agent/Ask modes (automatic changes, suggested changes, discussion only). Verify plan updates are correctly applied to the database. Test task regeneration after plan updates.

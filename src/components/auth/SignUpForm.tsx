@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'; // Import useRef
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 
-const SignUpForm = () => {
+const SignUpForm: React.FC = () => {
+  const { signUp } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -10,54 +12,51 @@ const SignUpForm = () => {
   const [formMessage, setFormMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { signUp } = useAuth();
-  const navigate = useNavigate();
-  const timerIdRef = useRef<NodeJS.Timeout | null>(null); // Use useRef for timerId
+  // Ref for the initial focus
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
-  // useEffect for cleaning up setTimeout if the component unmounts
   useEffect(() => {
-    // This cleanup function will be called when the component unmounts.
-    // It will clear the timeout if timerIdRef.current has a value.
-    return () => {
-      if (timerIdRef.current) {
-        clearTimeout(timerIdRef.current);
-      }
-    };
-  }, []); // Empty dependency array means this effect runs once on mount and cleanup on unmount
+    // Focus the email input field when the component mounts
+    emailInputRef.current?.focus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
     setFormMessage('');
+    setIsSubmitting(true);
 
     if (password !== confirmPassword) {
-      setFormError('Passwords do not match.');
+      setFormError('Passwords do not match');
+      setIsSubmitting(false);
       return;
     }
 
-    setIsSubmitting(true);
     try {
       const { data, error: signUpError } = await signUp({ email, password });
 
       if (signUpError) {
         setFormError(signUpError.message || 'Failed to sign up. Please try again.');
-      } else if (data.user && data.session) {
-        navigate('/');
-      } else if (data.user && !data.session) {
+      } else if (data?.user && !data?.session) {
+        // This case indicates email confirmation might be needed
         setFormMessage('Sign up successful! Please check your email to confirm your account. Redirecting to login...');
+        // Clear form fields
         setEmail('');
         setPassword('');
         setConfirmPassword('');
-        
-        // Clear any existing timer before setting a new one (belt-and-suspenders)
-        if (timerIdRef.current) {
-            clearTimeout(timerIdRef.current);
-        }
-        timerIdRef.current = setTimeout(() => { // Assign to .current
+        // Optional: redirect to login or a confirmation pending page after a delay
+        setTimeout(() => {
           navigate('/login');
-        }, 4000);
+        }, 3000); // 3-second delay before redirecting
+      } else if (data?.user && data?.session) {
+        // User is signed up and logged in (e.g. if auto-confirm is on)
+        setFormMessage('Sign up and login successful! Redirecting...');
+        setTimeout(() => {
+          navigate('/'); // Navigate to dashboard or home
+        }, 2000);
       } else {
-        setFormError('Sign up process completed. Please check your email or try logging in.');
+        // Fallback, should not ideally be reached if Supabase client behaves as expected
+        setFormError('An unexpected response was received. Please try again.');
       }
     } catch (err: any) {
       setFormError(err.message || 'An unexpected error occurred.');
@@ -67,20 +66,21 @@ const SignUpForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+    <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg border border-gray-200">
       <h2 className="text-2xl font-bold mb-6 text-center">Sign Up</h2>
-      <form onSubmit={handleSubmit}>
-        {formError && <p className="text-red-500 text-sm mb-4">{formError}</p>}
-        {formMessage && <p className="text-green-500 text-sm mb-4\">{formMessage}</p>}
+      <form onSubmit={handleSubmit} noValidate>
+        {formError && <p className="text-red-600 text-sm mb-4 text-center">{formError}</p>}
+        {formMessage && <p className="text-green-600 text-sm mb-4 text-center">{formMessage}</p>}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
             Email
           </label>
           <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            ref={emailInputRef} // Assign the ref here
+            className={`appearance-none block w-full px-3 py-2 border ${formError.includes('email') || formError.includes('Email rate limit exceeded') ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out`}
             id="email"
             type="email"
-            placeholder="Email"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -88,11 +88,11 @@ const SignUpForm = () => {
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
             Password
           </label>
           <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className={`appearance-none block w-full px-3 py-2 border ${formError.includes('password') || formError.includes('Password should be at least') ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out`}
             id="password"
             type="password"
             placeholder="******************"
@@ -102,12 +102,12 @@ const SignUpForm = () => {
             disabled={isSubmitting}
           />
         </div>
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="confirmPassword">
+        <div className="mb-5"> {/* Changed mb-4 to mb-5 for slightly more spacing before button */}
+          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="confirmPassword">
             Confirm Password
           </label>
           <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className={`appearance-none block w-full px-3 py-2 border ${formError.includes('Passwords do not match') ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out}`}
             id="confirmPassword"
             type="password"
             placeholder="******************"
@@ -117,20 +117,19 @@ const SignUpForm = () => {
             disabled={isSubmitting}
           />
         </div>
-        <div className="flex items-center justify-between">
+        <div className="mb-5">
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition duration-150 ease-in-out" 
             type="submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Signing Up...' : 'Sign Up'}
           </button>
-          <a
-            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-            href="/login"
-          >
+        </div>
+        <div className="text-center">
+          <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500 text-sm">
             Already have an account? Log In
-          </a>
+          </Link>
         </div>
       </form>
     </div>
@@ -138,3 +137,4 @@ const SignUpForm = () => {
 };
 
 export default SignUpForm;
+

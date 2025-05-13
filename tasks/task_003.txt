@@ -1,0 +1,18 @@
+# Task ID: 3
+# Title: Develop Onboarding Quiz Wizard
+# Status: pending
+# Dependencies: 2
+# Priority: high
+# Description: Create the multi-step onboarding questionnaire to gather initial user data for personalization.
+# Details:
+1. Design the wizard UI with step indicators and navigation controls
+2. Create ~7 core questions mixing MCQ and open-ended formats
+3. Implement state management for the wizard using Zustand or Context API
+4. Set up Supabase Function for processing onboarding answers
+5. Integrate with external LLM API (Claude/GPT/Gemini) for potential dynamic follow-up questions
+6. Store collected data in the user's profile
+7. Implement progress saving to allow users to continue later
+8. Add validation for required fields
+
+# Test Strategy:
+Test the wizard flow with various input combinations. Verify data is correctly saved to the profile. Test the dynamic follow-up question functionality with different initial responses.

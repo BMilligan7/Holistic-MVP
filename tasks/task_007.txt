@@ -1,0 +1,22 @@
+# Task ID: 7
+# Title: Develop AI Chatbot Coach
+# Status: pending
+# Dependencies: 6
+# Priority: medium
+# Description: Create the chatbot interface and backend logic for user interaction and support, including the ability for users to select different agent modes.
+# Details:
+1. Design and implement a prominent chat button on the dashboard that opens the chat interface
+2. Implement the chat UI with message history display using Tailwind CSS for styling
+3. Create a clean, usable chat experience with appropriate spacing, colors, and typography
+4. Implement a UI control (toggle or dropdown) within the Chatbot interface for users to select their preferred Agent/Ask mode
+5. Create Supabase Function for handling chat interactions with the LLM API
+6. Implement chat history storage in the chat_messages table
+7. Add context management to provide the AI with relevant user data
+8. Implement basic data logging via chat (meals, mood, etc.)
+9. Create typing indicators and loading states
+10. Add error handling and fallback responses
+11. Store and manage the user's Agent mode selection as part of the chat context
+12. Ensure the selected Agent mode persists across chat sessions for the same user
+
+# Test Strategy:
+Test the dashboard chat button functionality and UI appearance. Verify the chat interface opens correctly and displays properly with Tailwind styling. Test chat interactions with various queries. Verify chat history is correctly saved and displayed. Test the Agent/Ask mode toggle UI functionality. Test data logging functionality. Verify context management by checking if the AI references previous interactions. Test switching between different Agent modes and confirm the chatbot behavior changes appropriately. Verify that Agent mode selection persists between sessions.

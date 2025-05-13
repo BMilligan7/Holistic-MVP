@@ -1,0 +1,361 @@
+# Task ID: 1
+# Title: Setup Supabase Project and Database Schema
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Initialize the Supabase project, configure authentication, and create the database schema for all required tables.
+# Details:
+1. Create a new Supabase project
+2. Configure authentication settings (email/password)
+3. Create database tables according to the schema in the PRD: users, profiles, plans, daily_tasks, chat_messages, micro_surveys, and logged_data
+4. Set up appropriate relationships, constraints, and indexes
+5. Create RLS (Row Level Security) policies for each table to ensure data security
+6. Test database connections and basic CRUD operations
+7. Document the schema and access patterns
+
+# Test Strategy:
+Verify table creation with SQL queries. Test RLS policies by attempting to access data with different user contexts. Validate foreign key constraints and relationships by inserting test data.
+
+# Subtasks:
+## 1. Initialize Supabase Project and Configure Environment [done]
+### Dependencies: None
+### Description: Create a new Supabase project, set up the development environment, and configure the client connection for your application.
+### Details:
+1. Sign up or log in to Supabase dashboard (https://app.supabase.com)
+2. Create a new project with an appropriate name and secure password
+3. Note down the project URL and API keys (anon key and service role key)
+4. Install Supabase client in your application: `npm install @supabase/supabase-js` or equivalent for your framework
+5. Create a configuration file to store Supabase connection details (use environment variables for security)
+6. Initialize the Supabase client in your application:
+```javascript
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
+```
+7. Test the connection by making a simple query
+
+Testing approach: Verify the connection is working by running a simple query against the default public schema.
+
+## 2. Configure Authentication System [done]
+### Dependencies: 1.1
+### Description: Set up and configure the authentication system in Supabase, including email/password authentication, email templates, and redirect URLs.
+### Details:
+1. Navigate to Authentication > Settings in the Supabase dashboard
+2. Configure site URL and redirect URLs for your application
+3. Enable/disable email confirmations based on your requirements
+4. Customize email templates for confirmation, magic link, and password reset
+5. Configure password policies (minimum length, complexity requirements)
+6. Implement basic authentication functions in your application:
+```javascript
+// Sign up function
+async function signUp(email, password) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  })
+  return { data, error }
+}
+
+// Sign in function
+async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  return { data, error }
+}
+
+// Sign out function
+async function signOut() {
+  const { error } = await supabase.auth.signOut()
+  return { error }
+}
+```
+7. Test the authentication flow
+
+Testing approach: Create test users and verify the complete authentication flow including signup, email verification (if enabled), login, password reset, and logout.
+
+## 3. Create Core Database Tables and Relationships [done]
+### Dependencies: 1.1
+### Description: Design and implement the core database tables (users, profiles, plans) with appropriate relationships, constraints, and indexes.
+### Details:
+1. Create the users extension table (profiles):
+```sql
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  username TEXT UNIQUE,
+  full_name TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+```
+
+2. Create a trigger to automatically create a profile when a user signs up:
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, username, full_name)
+  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+```
+
+3. Create the plans table:
+```sql
+CREATE TABLE plans (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  start_date DATE NOT NULL,
+  end_date DATE,
+  status TEXT NOT NULL CHECK (status IN ('active', 'completed', 'abandoned')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX idx_plans_user_id ON plans(user_id);
+CREATE INDEX idx_plans_status ON plans(status);
+```
+
+4. Add updated_at triggers for automatic timestamp updates:
+```sql
+CREATE OR REPLACE FUNCTION update_modified_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_profiles_modtime
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+
+CREATE TRIGGER update_plans_modtime
+  BEFORE UPDATE ON plans
+  FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+```
+
+Testing approach: Insert test data into each table and verify relationships work correctly. Test foreign key constraints by attempting to delete referenced records.
+
+## 4. Create Supporting Database Tables and Relationships [done]
+### Dependencies: 1.3
+### Description: Design and implement the supporting database tables (daily_tasks, chat_messages, micro_surveys, logged_data) with appropriate relationships, constraints, and indexes.
+### Details:
+1. Create the daily_tasks table:
+```sql
+CREATE TABLE daily_tasks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  plan_id UUID REFERENCES plans(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  due_date DATE,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'completed', 'skipped')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX idx_daily_tasks_plan_id ON daily_tasks(plan_id);
+CREATE INDEX idx_daily_tasks_status ON daily_tasks(status);
+CREATE INDEX idx_daily_tasks_due_date ON daily_tasks(due_date);
+```
+
+2. Create the chat_messages table:
+```sql
+CREATE TABLE chat_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  content TEXT NOT NULL,
+  is_from_assistant BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX idx_chat_messages_user_id ON chat_messages(user_id);
+CREATE INDEX idx_chat_messages_created_at ON chat_messages(created_at);
+```
+
+3. Create the micro_surveys table:
+```sql
+CREATE TABLE micro_surveys (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  question TEXT NOT NULL,
+  response TEXT,
+  response_date TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX idx_micro_surveys_user_id ON micro_surveys(user_id);
+```
+
+4. Create the logged_data table:
+```sql
+CREATE TABLE logged_data (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  data_type TEXT NOT NULL,
+  data_value JSONB NOT NULL,
+  logged_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX idx_logged_data_user_id ON logged_data(user_id);
+CREATE INDEX idx_logged_data_data_type ON logged_data(data_type);
+CREATE INDEX idx_logged_data_logged_at ON logged_data(logged_at);
+```
+
+5. Add updated_at triggers for all tables:
+```sql
+CREATE TRIGGER update_daily_tasks_modtime
+  BEFORE UPDATE ON daily_tasks
+  FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+```
+
+Testing approach: Insert test data into each table and verify relationships work correctly. Test cascading deletes and constraints by performing various operations on related records.
+
+## 5. Implement Row Level Security Policies [done]
+### Dependencies: 1.3, 1.4
+### Description: Configure Row Level Security (RLS) policies for all tables to ensure proper data access control and security.
+### Details:
+1. Enable RLS on all tables:
+```sql
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE micro_surveys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE logged_data ENABLE ROW LEVEL SECURITY;
+```
+
+2. Create RLS policies for profiles table:
+```sql
+-- Users can view any profile
+CREATE POLICY "Profiles are viewable by everyone" 
+ON profiles FOR SELECT USING (true);
+
+-- Users can only update their own profile
+CREATE POLICY "Users can update their own profile" 
+ON profiles FOR UPDATE USING (auth.uid() = id);
+```
+
+3. Create RLS policies for plans table:
+```sql
+-- Users can view only their own plans
+CREATE POLICY "Users can view their own plans" 
+ON plans FOR SELECT USING (auth.uid() = user_id);
+
+-- Users can insert their own plans
+CREATE POLICY "Users can insert their own plans" 
+ON plans FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Users can update their own plans
+CREATE POLICY "Users can update their own plans" 
+ON plans FOR UPDATE USING (auth.uid() = user_id);
+
+-- Users can delete their own plans
+CREATE POLICY "Users can delete their own plans" 
+ON plans FOR DELETE USING (auth.uid() = user_id);
+```
+
+4. Create similar RLS policies for all other tables (daily_tasks, chat_messages, micro_surveys, logged_data) following the same pattern of restricting access to the user's own data.
+
+5. For tables with relationships (like daily_tasks), create policies that join to the parent table:
+```sql
+-- Users can view their own daily tasks
+CREATE POLICY "Users can view their own daily tasks" 
+ON daily_tasks FOR SELECT 
+USING (
+  auth.uid() IN (
+    SELECT user_id FROM plans WHERE id = daily_tasks.plan_id
+  )
+);
+```
+
+Testing approach: Test RLS policies by creating multiple test users and verifying that each user can only access their own data. Test with both the anon key and service role key to ensure policies are working correctly.
+
+## 6. Test Database Operations and Document Schema [done]
+### Dependencies: 1.2, 1.3, 1.4, 1.5
+### Description: Test CRUD operations on all tables, verify RLS policies are working correctly, and create comprehensive documentation for the database schema and access patterns.
+### Details:
+1. Create a test script to verify CRUD operations on all tables:
+```javascript
+async function testDatabaseOperations() {
+  // Test user authentication
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: 'test@example.com',
+    password: 'password123'
+  })
+  
+  // Test profile operations
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', authData.user.id)
+    .single()
+  
+  // Test plan operations
+  const { data: planData, error: planError } = await supabase
+    .from('plans')
+    .insert([
+      { 
+        user_id: authData.user.id,
+        title: 'Test Plan',
+        description: 'Test Description',
+        start_date: new Date().toISOString().split('T')[0],
+        status: 'active'
+      }
+    ])
+    .select()
+  
+  // Continue with tests for other tables...
+}
+```
+
+2. Test RLS policies by attempting unauthorized access:
+```javascript
+async function testRLSPolicies() {
+  // Create two test users
+  const { data: user1 } = await supabase.auth.signUp({...})
+  const { data: user2 } = await supabase.auth.signUp({...})
+  
+  // Create data for user1
+  await supabase.auth.setSession(user1.session)
+  const { data: plan1 } = await supabase.from('plans').insert([...])
+  
+  // Try to access user1's data as user2
+  await supabase.auth.setSession(user2.session)
+  const { data, error } = await supabase
+    .from('plans')
+    .select('*')
+    .eq('id', plan1[0].id)
+  
+  // Should return empty array or error due to RLS
+  console.log(data, error)
+}
+```
+
+3. Create comprehensive schema documentation:
+   - Create an Entity-Relationship Diagram (ERD) using a tool like dbdiagram.io or Lucidchart
+   - Document each table's purpose, columns, constraints, and relationships
+   - Document RLS policies and access patterns
+   - Document common queries and operations
+   - Include examples of how to perform CRUD operations on each table
+
+4. Create a database migration script or use Supabase migrations:
+```bash
+npx supabase migration new initial_schema
+```
+
+5. Document the authentication flow and how it integrates with the database schema
+
+Testing approach: Run comprehensive tests on all tables and relationships. Verify that RLS policies correctly restrict access. Test edge cases like cascading deletes and constraint violations.
+

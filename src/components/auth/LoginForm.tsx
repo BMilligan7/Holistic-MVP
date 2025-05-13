@@ -48,31 +48,31 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+    <div className="max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg border border-gray-200">
       <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
       <form onSubmit={handleSubmit} noValidate>
-        {formError && <p className="text-red-500 text-sm mb-4">{formError}</p>}
+        {formError && <p className="text-red-600 text-sm mb-4 text-center">{formError}</p>}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
+          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
             Email
           </label>
           <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className={`appearance-none block w-full px-3 py-2 border ${formError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out`}
             id="email"
             type="email"
-            placeholder="Email"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={isSubmitting}
           />
         </div>
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="password">
             Password
           </label>
           <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+            className={`appearance-none block w-full px-3 py-2 border ${formError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out`}
             id="password"
             type="password"
             placeholder="******************"
@@ -81,25 +81,27 @@ const LoginForm = () => {
             required
             disabled={isSubmitting}
           />
+          <div className="text-right mt-1">
+            <a
+              className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
+              href="/reset-password"
+            >
+              Forgot Password?
+            </a>
+          </div>
         </div>
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-5">
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition duration-150 ease-in-out"
             type="submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Signing In...' : 'Sign In'}
           </button>
-          <a
-            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-            href="/reset-password"
-          >
-            Forgot Password?
-          </a>
         </div>
         <div className="text-center">
           <a
-            className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+            className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
             href="/signup"
           >
             Don't have an account? Sign Up

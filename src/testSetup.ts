@@ -75,3 +75,6 @@ vi.mock('@supabase/supabase-js', async (importOriginal) => {
 // Any other global test setup (e.g., for testing-library) that was originally here
 // and IS NOT related to import.meta or SUPABASE_URL mocks should remain if needed.
 // For now, we are focusing on just the Supabase client mock.
+
+// Other global setup, like testing-library matchers, can go here.
+// For now, Supabase client mocks will be handled in individual test files.

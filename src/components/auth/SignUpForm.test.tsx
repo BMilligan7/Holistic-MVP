@@ -11,7 +11,7 @@ import { MemoryRouter } from 'react-router-dom';
 vi.mock('../../lib/supabaseClient', () => ({
   supabase: {
     auth: {
-      signUp: vi.fn(), // This specific mock might not be directly used by tests anymore but good for AuthProvider
+      signUp: vi.fn(),
       getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
       onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
     },
@@ -28,17 +28,22 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-// Mock useAuth hook
+// Define the mock function that will be used by the useAuth mock
 const mockSignUpFromAuthContext = vi.fn();
+
+// Mock the contexts/AuthContext module
 vi.mock('../../contexts/AuthContext', async () => {
-  const actual = await vi.importActual('../../contexts/AuthContext');
+  const actualAuthContext = await vi.importActual('../../contexts/AuthContext');
   return {
-    ...actual, // Preserve AuthProvider
-    useAuth: () => ({
-      signUp: mockSignUpFromAuthContext, // Provide the mock for signUp
+    ...actualAuthContext, // Preserve AuthProvider and other potential exports
+    useAuth: () => ({     // Mock the useAuth hook
+      signUp: mockSignUpFromAuthContext,
       user: null, 
       loading: false,
-      // Add other mocks from useAuth if SignUpForm uses them
+      // Ensure all properties/methods returned by your actual useAuth are mocked here
+      // For example, if useAuth also returns signIn, logOut, etc., they should be here:
+      // signIn: vi.fn(), 
+      // logOut: vi.fn(),
     }),
   };
 });

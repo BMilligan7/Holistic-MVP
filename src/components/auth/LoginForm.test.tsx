@@ -3,11 +3,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import LoginForm from './LoginForm';
-// import { AuthProvider, useAuth } from '../../contexts/AuthContext'; // Will be mocked
+// Import the AuthProvider here. Due to vi.mock, it will be our MockAuthProvider.
+import { AuthProvider } from '../../contexts/AuthContext'; 
 import { MemoryRouter } from 'react-router-dom'; 
-
-// Remove the old supabaseClient mock
-// vi.mock('../../lib/supabaseClient', () => ({ ... }));
 
 // Mock react-router-dom's useNavigate
 const mockedUseNavigate = vi.fn();
@@ -29,14 +27,14 @@ const mockResetPassword = vi.fn();
 vi.mock('../../contexts/AuthContext', async () => {
   const actualAuthContextImport = await vi.importActual('../../contexts/AuthContext');
   
-  const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const MockAuthProviderComponent = ({ children }: { children: React.ReactNode }) => {
     console.log('[TESTING LoginForm.test.tsx] MockAuthProvider is rendering.');
     return <>{children}</>;
   };
 
   return {
     ...(actualAuthContextImport as any), 
-    AuthProvider: MockAuthProvider,    
+    AuthProvider: MockAuthProviderComponent,    
     useAuth: () => ({                  
       user: null, 
       session: null,
@@ -52,10 +50,10 @@ vi.mock('../../contexts/AuthContext', async () => {
 
 // Helper function to render with providers
 const renderWithProviders = (ui: React.ReactElement) => {
-  const { AuthProvider } = require('../../contexts/AuthContext');
+  // AuthProvider is now imported at the top and is already our mocked version.
   return render(
     <MemoryRouter>
-      <AuthProvider>
+      <AuthProvider> {/* This uses the mocked AuthProvider from the top import */}
         {ui}
       </AuthProvider>
     </MemoryRouter>
@@ -82,9 +80,8 @@ describe('LoginForm', () => {
       error: {
         name: 'AuthApiError',
         message: 'Invalid login credentials', 
-        // ... other error properties
       },
-      data: null, // Or user: null, session: null, depending on your signIn service structure
+      data: null, 
     });
 
     const user = userEvent.setup();

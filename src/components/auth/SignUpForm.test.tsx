@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SignUpForm from './SignUpForm';
-// import { supabase } from '../../lib/supabaseClient'; // No longer needed directly
-import { AuthProvider, useAuth } from '../../contexts/AuthContext';
+// Import the AuthProvider here. Due to vi.mock, it will be our MockAuthProvider.
+import { AuthProvider } from '../../contexts/AuthContext'; 
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock react-router-dom's useNavigate
@@ -19,61 +19,51 @@ vi.mock('react-router-dom', async () => {
 
 // Define mock functions for all auth operations that useAuth will return
 const mockSignUp = vi.fn();
-const mockSignIn = vi.fn(); // Add if LoginForm uses it, or for completeness
-const mockSignOut = vi.fn(); // Add if needed
-const mockResetPassword = vi.fn(); // Add if needed
+const mockSignIn = vi.fn(); 
+const mockSignOut = vi.fn(); 
+const mockResetPassword = vi.fn();
 
 // Mock the contexts/AuthContext module
 vi.mock('../../contexts/AuthContext', async () => {
   const actualAuthContextImport = await vi.importActual('../../contexts/AuthContext');
   
-  // A simple MockAuthProvider that doesn't run the problematic useEffect
-  const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const MockAuthProviderComponent = ({ children }: { children: React.ReactNode }) => {
     console.log('[TESTING SignUpForm.test.tsx] MockAuthProvider is rendering.');
     return <>{children}</>;
   };
 
   return {
-    ...(actualAuthContextImport as any), // Spread to keep other exports like ReactNode type if used from actual
-    AuthProvider: MockAuthProvider,    // Provide our simplified provider
-    useAuth: () => ({                  // Mock the useAuth hook
+    ...(actualAuthContextImport as any), 
+    AuthProvider: MockAuthProviderComponent, // Export our mock provider as AuthProvider
+    useAuth: () => ({                  
       user: null, 
       session: null,
       isLoading: false,
       error: null,
       signUp: mockSignUp, 
-      // Ensure all properties/methods returned by your actual useAuth are mocked here
       signIn: mockSignIn, 
       signOut: mockSignOut,
       resetPassword: mockResetPassword,
-      // onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })), // If needed directly by components
     }),
   };
 });
 
 // Helper function to render with providers
-// It will now use the MockAuthProvider from our mock
 const renderWithProviders = (ui: React.ReactElement) => {
-  // Dynamically import AuthProvider here AFTER the mock is set up
-  // This is a common pattern to ensure the mocked version is used.
-  // However, with vi.mock hoisting, direct import might also work.
-  // For safety and clarity, let's ensure it uses the one from the module scope (which is mocked)
-  const { AuthProvider } = require('../../contexts/AuthContext'); 
-
+  // AuthProvider is now imported at the top and is already our mocked version.
   return render(
     <MemoryRouter>
-      <AuthProvider>
+      <AuthProvider> {/* This uses the mocked AuthProvider from the top import */}
         {ui}
       </AuthProvider>
     </MemoryRouter>
   );
 };
 
+
 describe('SignUpForm', () => {
   beforeEach(() => {
-    vi.resetAllMocks(); // Vitest's built-in way to reset all mocks
-    // mockedUseNavigate.mockReset(); // Covered by vi.resetAllMocks()
-    // mockSignUp.mockReset();      // Covered by vi.resetAllMocks()
+    vi.resetAllMocks(); 
   });
 
   it('should render the form elements', () => {
@@ -86,14 +76,12 @@ describe('SignUpForm', () => {
   });
 
   it('should display an error message for invalid email format from Supabase', async () => {
-    // Use the new top-level mockSignUp directly
     mockSignUp.mockResolvedValueOnce({ 
       error: {
         name: 'AuthApiError',
         message: 'Invalid email address format',
-        // ... other error properties
       },
-      data: null, // Ensure data is explicitly null or what your app expects
+      data: null, 
     });
 
     const user = userEvent.setup();
@@ -114,7 +102,6 @@ describe('SignUpForm', () => {
       error: {
         name: 'AuthApiError',
         message: 'Password should be at least 8 characters and include uppercase, lowercase, and numbers.',
-        // ... other error properties
       },
       data: null,
     });

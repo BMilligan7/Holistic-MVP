@@ -1,0 +1,40 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'feature/core-authentication' # Add your current feature branch
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x] # You can specify multiple Node versions to test against
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm' # Cache npm dependencies
+
+    - name: Install dependencies
+      run: npm ci # Use npm ci for cleaner, faster, and more reliable installs in CI
+
+    - name: Run tests
+      run: npm test
+
+    # Optional: Add a build step if you want to catch build errors
+    # - name: Build project
+    #   run: npm run build 

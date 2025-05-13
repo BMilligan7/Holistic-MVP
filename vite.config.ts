@@ -11,5 +11,9 @@ export default defineConfig({
     environment: 'jsdom', // Simulates a browser environment
     setupFiles: './src/testSetup.ts', // Optional: for global test setup (e.g., Jest-DOM matchers)
     css: true, // If you want to test components that import CSS files
+    env: { // Add environment variables for Vitest
+      VITE_SUPABASE_URL: 'http://localhost:54321', // Dummy URL
+      VITE_SUPABASE_ANON_KEY: 'dummy_key_for_ci_tests', // Dummy key
+    },
   },
 }) 

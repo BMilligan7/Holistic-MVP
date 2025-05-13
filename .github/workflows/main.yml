@@ -19,6 +19,10 @@ jobs:
       matrix:
         node-version: [18.x, 20.x] # You can specify multiple Node versions to test against
 
+    env: # Add environment variables here
+      VITE_SUPABASE_URL: http://localhost:54321 # Dummy URL
+      VITE_SUPABASE_ANON_KEY: dummy_key_for_ci_tests # Dummy key
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4

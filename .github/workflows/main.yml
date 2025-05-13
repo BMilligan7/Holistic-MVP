@@ -17,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x] # You can specify multiple Node versions to test against
+        node-version: [20.x] # Test only on Node 20.x for now
 
     steps:
     - name: Checkout repository
@@ -33,10 +33,7 @@ jobs:
       run: npm ci # Use npm ci for cleaner, faster, and more reliable installs in CI
 
     - name: Run tests
-      env: # Add to step level
-        VITE_SUPABASE_URL: http://localhost:54321 # Dummy URL
-        VITE_SUPABASE_ANON_KEY: dummy_key_for_ci_tests # Dummy key
-      run: npm test
+      run: VITE_SUPABASE_URL=http://localhost:54321 VITE_SUPABASE_ANON_KEY=dummy_key_for_ci_tests npm test # Set env vars directly
 
     # Optional: Add a build step if you want to catch build errors
     # - name: Build project

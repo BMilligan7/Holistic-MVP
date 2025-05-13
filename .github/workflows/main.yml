@@ -33,7 +33,7 @@ jobs:
       run: npm ci # Use npm ci for cleaner, faster, and more reliable installs in CI
 
     - name: Run tests
-      run: VITE_SUPABASE_URL=http://localhost:54321 VITE_SUPABASE_ANON_KEY=dummy_key_for_ci_tests npm test # Set env vars directly
+      run: npm test # Env vars now handled by the script in package.json
 
     # Optional: Add a build step if you want to catch build errors
     # - name: Build project

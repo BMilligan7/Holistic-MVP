@@ -84,7 +84,7 @@
       "id": 2,
       "title": "Implement User Authentication and Profile Management",
       "description": "Create the frontend authentication flow and profile management functionality using Supabase Auth.",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         1
       ],
@@ -168,7 +168,7 @@
             2
           ],
           "details": "1. Review existing SignUp and Login form components\n2. Create a consistent styling approach using Tailwind CSS classes\n3. Apply styling to form containers:\n   - Add appropriate padding, margin, and border-radius\n   - Use shadow effects for depth\n   - Implement responsive design for different screen sizes\n4. Style form inputs:\n   - Consistent height, padding, and border styles\n   - Focus states with appropriate highlighting\n   - Error states with visual indicators\n5. Style buttons:\n   - Primary action buttons with brand colors\n   - Secondary/tertiary buttons with appropriate styling\n   - Hover and active states\n6. Add transitions and micro-interactions for better UX\n7. Ensure proper spacing between form elements\n8. Implement responsive adjustments for mobile devices\n9. Test styling across different browsers and screen sizes\n10. Ensure all styled components maintain accessibility standards\n<info added on 2025-05-12T23:12:47.454Z>\n1. Review existing SignUp and Login form components\\n2. Create a consistent styling approach using Tailwind CSS classes\\n3. Apply styling to form containers:\\n   - Add appropriate padding, margin, and border-radius\\n   - Use shadow effects for depth\\n   - Implement responsive design for different screen sizes\\n4. Style form inputs:\\n   - Consistent height, padding, and border styles\\n   - Focus states with appropriate highlighting\\n   - Error states with visual indicators\\n5. Style buttons:\\n   - Primary action buttons with brand colors\\n   - Secondary/tertiary buttons with appropriate styling\\n   - Hover and active states\\n6. Add transitions and micro-interactions for better UX\\n7. Ensure proper spacing between form elements\\n8. Implement responsive adjustments for mobile devices\\n9. Test styling across different browsers and screen sizes\\n10. Ensure all styled components maintain accessibility standards\\n\\nImplementation Plan for Styling Enhancement:\\n\\nTarget Files:\\n- src/components/auth/SignUpForm.tsx\\n- src/components/auth/LoginForm.tsx\\n\\nDetailed Class Changes:\\n\\n1. Container Styling:\\n   - Current: max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md\\n   - Enhanced: max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg border border-gray-200\\n   - Improvements: Increased padding, stronger shadow effect, added subtle border\\n\\n2. Input Field Styling:\\n   - Current: shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline\\n   - Enhanced: appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition duration-150 ease-in-out\\n   - Error State: border-red-500 focus:ring-red-500 focus:border-red-500\\n   - Improvements: Better focus states with ring effect, smoother transitions, clearer error states\\n\\n3. Label Styling:\\n   - Current: block text-gray-700 text-sm font-bold mb-2\\n   - Enhanced: block text-sm font-medium text-gray-700 mb-1\\n   - Improvements: More balanced font weight, optimized spacing\\n\\n4. Button Styling:\\n   - Current: bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50\\n   - Enhanced: w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition duration-150 ease-in-out\\n   - Improvements: Full width for better mobile experience, indigo color scheme for brand consistency, improved focus states, smooth transitions\\n\\n5. Link Styling:\\n   - Current: inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800\\n   - Enhanced: font-medium text-indigo-600 hover:text-indigo-500 text-sm\\n   - Improvements: Consistent color scheme with buttons, balanced font weight\\n\\n6. Error/Success Message Styling:\\n   - Current: text-red-500 text-sm mb-4 / text-green-500 text-sm mb-4\\n   - Enhanced: text-red-600 text-sm mb-4 text-center / text-green-600 text-sm mb-4 text-center\\n   - Improvements: Darker, more accessible text colors, centered alignment for better readability\\n\\n7. Component Spacing:\\n   - Standardize vertical spacing between form groups using mb-4 or mb-5 consistently\\n   - Ensure proper spacing between related elements for visual hierarchy\\n\\nNote: No changes needed for page wrapper components (SignupPage.tsx, LoginPage.tsx) as they already provide appropriate centering and background styling.\n</info added on 2025-05-12T23:12:47.454Z>",
-          "status": "pending",
+          "status": "done",
           "parentTaskId": 2
         },
         {
@@ -179,8 +179,8 @@
             3,
             4
           ],
-          "details": "1. Create a `SettingsPage.tsx` component in the pages directory\n2. Design the settings form with fields for:\n   - Username (with validation)\n   - Agent ask preference (dropdown or toggle options)\n   - Other relevant profile settings from the PRD\n3. Apply consistent Tailwind CSS styling:\n   - Clean card-based layout with appropriate spacing\n   - Consistent input styling matching other forms\n   - Clear section headings and descriptions\n4. Connect the settings form to the profile data service\n5. Implement save/cancel functionality with proper loading states\n6. Add success/error notifications for settings updates\n7. Ensure the page is fully responsive\n8. Add form validation for all fields\n9. Test the settings update functionality with real data\n10. Ensure accessibility of all form controls",
-          "status": "pending",
+          "details": "1. Create a `SettingsPage.tsx` component in the pages directory\n2. Design the settings form with fields for:\n   - Username (with validation)\n   - Agent ask preference (dropdown or toggle options)\n   - Other relevant profile settings from the PRD\n3. Apply consistent Tailwind CSS styling:\n   - Clean card-based layout with appropriate spacing\n   - Consistent input styling matching other forms\n   - Clear section headings and descriptions\n4. Connect the settings form to the profile data service\n5. Implement save/cancel functionality with proper loading states\n6. Add success/error notifications for settings updates\n7. Ensure the page is fully responsive\n8. Add form validation for all fields\n9. Test the settings update functionality with real data\n10. Ensure accessibility of all form controls\n<info added on 2025-05-14T06:25:09.058Z>\n1. Create a `SettingsPage.tsx` component in the pages directory\n2. Design the settings form with fields for:\n   - Username (with validation)\n   - ~~Agent ask preference (dropdown or toggle options)~~ (Removed from scope)\n   - ~~Other relevant profile settings from the PRD~~ (Removed from scope)\n3. Apply consistent Tailwind CSS styling:\n   - Clean card-based layout with appropriate spacing\n   - Consistent input styling matching other forms\n   - Clear section headings and descriptions\n4. Connect the settings form to the profile data service for username updates only\n5. Implement save/cancel functionality with proper loading states for username changes\n6. Add success/error notifications for username updates\n7. Ensure the page is fully responsive\n8. Add form validation for username field\n9. Test the username update functionality with real data\n10. Ensure accessibility of all form controls\n\nNote: Scope has been reduced to focus only on username management. The UI for this has been styled and completed. The \"agent_ask_preference\" feature has been removed from scope.\n</info added on 2025-05-14T06:25:09.058Z>\n<info added on 2025-05-14T06:29:38.870Z>\nBased on the scope reduction, the Settings page implementation has been modified to focus exclusively on username management:\n\n1. Created `SettingsPage.tsx` component in the pages directory\n2. Designed a simplified settings form with:\n   - Username field with proper validation\n   - Removed agent_ask_preference functionality as it's now part of the chatbot UI implementation\n3. Applied Tailwind CSS styling:\n   - Clean card-based layout with appropriate spacing\n   - Consistent input styling matching other forms\n   - Clear section headings and descriptions\n4. Connected the settings form to the profile data service for username updates only\n5. Implemented save/cancel functionality with proper loading states\n6. Added success/error notifications for settings updates\n7. Ensured the page is fully responsive\n8. Added form validation for username field\n9. Tested the username update functionality with real data\n10. Ensured accessibility of all form controls\n\nThe UI for the username management has been styled and completed. The \"agent_ask_preference\" feature has been moved to the chatbot UI implementation and is therefore out of scope for this specific subtask.\n</info added on 2025-05-14T06:29:38.870Z>",
+          "status": "done",
           "parentTaskId": 2
         }
       ]
@@ -195,7 +195,93 @@
       ],
       "priority": "high",
       "details": "1. Design the wizard UI with step indicators and navigation controls\n2. Create ~7 core questions mixing MCQ and open-ended formats\n3. Implement state management for the wizard using Zustand or Context API\n4. Set up Supabase Function for processing onboarding answers\n5. Integrate with external LLM API (Claude/GPT/Gemini) for potential dynamic follow-up questions\n6. Store collected data in the user's profile\n7. Implement progress saving to allow users to continue later\n8. Add validation for required fields",
-      "testStrategy": "Test the wizard flow with various input combinations. Verify data is correctly saved to the profile. Test the dynamic follow-up question functionality with different initial responses."
+      "testStrategy": "Test the wizard flow with various input combinations. Verify data is correctly saved to the profile. Test the dynamic follow-up question functionality with different initial responses.",
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Design Wizard UI Framework",
+          "description": "Create the overall UI structure for the onboarding wizard that breaks down the complex process into sequential steps",
+          "dependencies": [],
+          "details": "Design a modal window with clear navigation controls, progress indicators, and a consistent layout that guides users through the onboarding process. Include wireframes and mockups for different screen sizes.",
+          "status": "pending"
+        },
+        {
+          "id": 2,
+          "title": "Develop Question Creation System",
+          "description": "Build a system to create, manage and organize onboarding quiz questions",
+          "dependencies": [
+            1
+          ],
+          "details": "Create interfaces for defining question types (multiple choice, text input, etc.), validation rules, branching logic, and question dependencies. Include tools for question previewing and testing.",
+          "status": "pending"
+        },
+        {
+          "id": 3,
+          "title": "Implement State Management",
+          "description": "Develop a robust state management system to handle user progress and responses",
+          "dependencies": [
+            1,
+            2
+          ],
+          "details": "Create a state management architecture that tracks user inputs, handles conditional logic between questions, manages validation states, and preserves the current session state. Include error handling and recovery mechanisms.",
+          "status": "pending"
+        },
+        {
+          "id": 4,
+          "title": "Build Backend Integration Layer",
+          "description": "Create APIs and services to connect the wizard frontend with backend systems",
+          "dependencies": [
+            3
+          ],
+          "details": "Develop RESTful APIs for data exchange between the wizard and backend services. Include authentication, error handling, and logging capabilities to ensure reliable communication.",
+          "status": "pending"
+        },
+        {
+          "id": 5,
+          "title": "Integrate LLM API",
+          "description": "Connect the wizard with Language Learning Model APIs for intelligent response processing",
+          "dependencies": [
+            3,
+            4
+          ],
+          "details": "Implement integration with LLM APIs to analyze user responses, provide personalized feedback, and adapt question flow based on user inputs. Include fallback mechanisms for API failures.",
+          "status": "pending"
+        },
+        {
+          "id": 6,
+          "title": "Design Data Storage Architecture",
+          "description": "Create a database schema and storage system for user responses and wizard configuration",
+          "dependencies": [
+            4
+          ],
+          "details": "Design database models for storing question configurations, user responses, and session data. Include considerations for data security, performance optimization, and scalability.",
+          "status": "pending"
+        },
+        {
+          "id": 7,
+          "title": "Implement Progress Saving Mechanism",
+          "description": "Create functionality to save and restore user progress through the wizard",
+          "dependencies": [
+            3,
+            6
+          ],
+          "details": "Develop automatic and manual save points throughout the wizard flow. Implement session recovery, progress indicators, and the ability to resume from where users left off.",
+          "status": "pending"
+        },
+        {
+          "id": 8,
+          "title": "Build Validation and Completion System",
+          "description": "Create comprehensive validation rules and completion handling for the wizard",
+          "dependencies": [
+            2,
+            3,
+            6,
+            7
+          ],
+          "details": "Implement input validation for all question types, overall wizard completion validation, and success/failure handling. Include user feedback mechanisms and next steps guidance upon completion.",
+          "status": "pending"
+        }
+      ]
     },
     {
       "id": 4,
@@ -249,14 +335,14 @@
     {
       "id": 8,
       "title": "Implement Agent/Ask Model and Plan Updates",
-      "description": "Create the functionality for users to control how the AI handles plan updates and implement the plan update logic.",
+      "description": "Develop the core agentic workflow for the AI, enabling it to operate in different modes (e.g., proactive agent vs. responsive assistant) based on user preference. This includes implementing the logic for how the AI suggests and applies plan updates according to the selected Agent/Ask model.",
       "status": "pending",
       "dependencies": [
         7
       ],
       "priority": "medium",
-      "details": "1. Add Agent/Ask preference setting to the Settings page UI\n2. Update the profile schema to store this preference\n3. Enhance the chatbot function to respect the Agent/Ask setting\n4. Implement logic for the AI to suggest plan changes\n5. Create functionality to apply plan updates (updating plans table)\n6. Implement task regeneration after plan updates\n7. Add notifications or visual indicators for plan changes\n8. Create a history of plan versions",
-      "testStrategy": "Test all three Agent/Ask modes (automatic changes, suggested changes, discussion only). Verify plan updates are correctly applied to the database. Test task regeneration after plan updates."
+      "details": "1. Update the profile schema to store the user's Agent/Ask preference\n2. Develop and implement the distinct behavioral models for the AI based on the user's Agent/Ask preference. This includes how the AI processes information, makes decisions (e.g., proactively suggesting plan changes, automatically applying them, or requiring explicit user confirmation), and interacts with plan update mechanisms\n3. Implement logic for the AI to suggest plan changes based on the active mode\n4. Create functionality to apply plan updates (updating the `plans` table) according to the active Agent/Ask mode and user confirmations if required\n5. Implement task regeneration after plan updates\n6. Add notifications or visual indicators for plan changes\n7. Create a history of plan versions",
+      "testStrategy": "Test all Agent/Ask modes (proactive agent, responsive assistant, etc.). Verify plan updates are correctly applied to the database according to each mode's behavior. Test user confirmation flows where required. Verify task regeneration after plan updates. Ensure notifications and history tracking work correctly across all modes."
     },
     {
       "id": 9,

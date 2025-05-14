@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SettingsPage from './pages/SettingsPage';
+import OnboardingTestPage from './pages/OnboardingTestPage';
 
 // Placeholder pages - these will need to be created in src/pages/
 const DashboardPage = () => <div>Dashboard Page (Protected)</div>;
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
       { path: 'login', element: <LoginPage /> },
       { path: 'signup', element: <SignupPage /> },
       { path: 'reset-password', element: <ResetPasswordPage /> },
+      { path: 'onboarding-test', element: <OnboardingTestPage /> },
 
       // Protected routes
       {

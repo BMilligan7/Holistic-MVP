@@ -408,7 +408,7 @@ This plan follows the dev_workflow recommendations: initial exploration, detaile
 10. Ensure accessibility of error messages
 11. Add specific validation for profile settings (username character limits, etc.)
 
-## 7. Enhance authentication components with Tailwind CSS styling [done]
+## 7. Enhance authentication components with Tailwind CSS styling [pending]
 ### Dependencies: 2.2
 ### Description: Apply clean and consistent Tailwind CSS styling to the authentication components for better user experience
 ### Details:

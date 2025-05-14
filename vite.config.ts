@@ -10,6 +10,7 @@ export default defineConfig({
     globals: true, // Allows using describe, test, expect, etc. without importing them
     environment: 'jsdom', // Simulates a browser environment
     setupFiles: './src/testSetup.ts', // Optional: for global test setup (e.g., Jest-DOM matchers)
-    css: true, // If you want to test components that import CSS files
+    // css: true, // no longer needed with vite-plugin-stylex
+    // We'll rely on Vite's auto-detection for PostCSS, so no css.postcss block here
   },
 }) 

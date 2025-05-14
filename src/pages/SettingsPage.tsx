@@ -2,7 +2,7 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { useProfile } from '../hooks/useProfile';
 // import { Profile } from '../services/profile'; // Removed unused import
 import { useAuth } from '../contexts/AuthContext'; // Import useAuth
-import Navbar from '../components/layout/Navbar'; // Ensure Navbar is imported if used
+// import Navbar from '../components/layout/Navbar'; // Ensure Navbar is imported if used - REMOVING THIS LINE
 // import AvatarUpload from '../components/profile/AvatarUpload'; // Removed import
 
 const SettingsPage: React.FC = () => { // Renamed component here
@@ -83,64 +83,79 @@ const SettingsPage: React.FC = () => { // Renamed component here
   if (isErrorProfile) return <div>Error loading profile: {profileError?.message}</div>;
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-      <Navbar /> {/* Include Navbar if it's part of the layout */}
-      <h1>Settings</h1> {/* Updated heading */}
-      <p>Welcome, {displayEmail}</p>
+    // Apply Tailwind classes for overall page structure and form container
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* <Navbar /> NO LONGER RENDERING NAVBAR HERE */}
+      <div className="max-w-xl mx-auto mt-8">
+        <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+          <h1 className="text-3xl font-extrabold text-center text-gray-900 mb-2">Settings</h1> {/* Updated heading */}
+          <p className="text-center text-sm text-gray-600 mb-8">Welcome, {displayEmail}</p>
 
-      <form onSubmit={handleSubmit}>
-        {/* Removed Avatar Upload Section */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Removed Avatar Upload Section */}
 
-        {/* Email Field (Display Only) */}
-        <div>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '5px' }}>Email</label>
-          <input 
-            type="email" 
-            id="email" 
-            value={displayEmail} // Display user's actual email
-            disabled 
-            style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-          />
+            {/* Email Field (Display Only) */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <div className="mt-1">
+                <input 
+                  type="email" 
+                  id="email" 
+                  value={displayEmail} // Display user's actual email
+                  disabled 
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-100 cursor-not-allowed"
+                />
+              </div>
+            </div>
+            
+            {/* Username Field */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                Username
+              </label>
+              <div className="mt-1">
+                <input 
+                  type="text" 
+                  id="username" 
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (usernameError) setUsernameError(null); // Clear error when user types
+                  }}
+                  required // Make username required if needed
+                  className={`appearance-none block w-full px-3 py-2 border ${usernameError ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'} rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm transition duration-150 ease-in-out`}
+                  disabled={isUpdatingProfile} // Disable input while updating
+                />
+              </div>
+              {/* Display Validation Error */}
+              {usernameError && <p className="mt-2 text-sm text-red-600">{usernameError}</p>}
+            </div>
+            
+            {/* Removed Bio Field */}
+
+            {/* TODO: Add other settings fields based on PRD profile schema (e.g., agent_ask_preference) */}
+            
+            {/* Submit Button */}
+            <div>
+              <button 
+                type="submit" 
+                disabled={isUpdatingProfile}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition duration-150 ease-in-out"
+              >
+                {isUpdatingProfile ? 'Saving...' : 'Save Username'}
+              </button>
+            </div>
+            {/* Display mutation error */} 
+            {isUpdateError && (
+              <p className="mt-2 text-sm text-center text-red-600">
+                Error: {updateError?.message || 'Failed to save username.'}
+              </p>
+            )}
+          </form>
         </div>
-        
-        {/* Username Field */}
-        <div>
-          <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Username</label>
-          <input 
-            type="text" 
-            id="username" 
-            value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-              if (usernameError) setUsernameError(null); // Clear error when user types
-            }}
-            required // Make username required if needed
-            style={{ width: '100%', padding: '8px', marginBottom: '10px' }}
-            disabled={isUpdatingProfile} // Disable input while updating
-          />
-          {/* Display Validation Error */}
-          {usernameError && <p style={{ color: 'red' }}>{usernameError}</p>}
-        </div>
-        
-        {/* Removed Bio Field */}
-
-        {/* TODO: Add other settings fields based on PRD profile schema (e.g., agent_ask_preference) */}
-        
-        {/* Submit Button */}
-        <button 
-          type="submit" 
-          disabled={isUpdatingProfile}
-          style={{ padding: '10px 20px', cursor: 'pointer' }}
-        >
-          {isUpdatingProfile ? 'Saving...' : 'Save Username'}
-        </button>
-        {/* Display mutation error */} 
-        {isUpdateError && (
-          <p style={{ color: 'red' }}>
-            Error: {updateError?.message || 'Failed to save username.'}
-          </p>
-        )}
-      </form>
+      </div>
     </div>
   );
 };
